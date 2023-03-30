@@ -1,0 +1,159 @@
+<script type="text/javascript">
+    function showNuveiCheckout() {
+        console.log('showNuveiCheckout()');
+
+        nuveiCheckoutSdkParams              = {{ nuvei_sdk_params|json_encode() }};
+        nuveiCheckoutSdkParams.prePayment   = nuveiPrePayment;
+        nuveiCheckoutSdkParams.onResult     = nuveiAfterSdkResponse;
+
+        console.log(nuveiCheckoutSdkParams);
+
+        checkout(nuveiCheckoutSdkParams);
+    }
+
+    function nuveiPrePayment(paymentDetails) {
+        console.log('nuveiPrePayment');
+
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|open_order',
+                type: 'post',
+                dataType: 'json'
+            })
+            .fail(function(){
+                scFormFalse("{{ nuvei_order_error }}");
+                reject();
+            })
+            .done(function(resp) {
+                if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
+                    if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
+                        resolve();
+                        return;
+                    }
+
+                    console.log(resp);
+
+                    // reload the Checkout
+                    nuveiCheckoutSdkParams.sessionToken = resp.sessionToken;
+                    nuveiCheckoutSdkParams.amount       = resp.amount;
+
+                    showNuveiCheckout();
+                    return;
+                }
+                
+                if (resp.hasOwnProperty('msg') && '' != resp.msg) {
+                    scFormFalse(resp.msg);
+                    reject();
+                    return;
+                }
+
+                scFormFalse("{{ nuvei_order_error }}");
+                reject();
+            });
+
+        });
+    }
+
+    function nuveiAfterSdkResponse(resp) {
+        console.log('nuveiAfterSdkResponse', resp);
+        console.log('nuveiAfterSdkResponse', resp.transactionId);
+
+        if(resp.hasOwnProperty('result')) {
+            if(resp.result == 'APPROVED' && resp.hasOwnProperty('transactionId')) {
+                $.ajax({
+                    url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|confirm&language={{ language }}',
+                    data: { nuvei_tr_id: resp.transactionId },
+                    type: 'post',
+                    dataType: 'json',
+
+                    beforeSend: function () {
+                        $('#nuvei_blocker').removeClass('d-none');
+                        $('#nuvei_error').addClass('d-none');
+                    },
+
+                    complete: function () {
+
+                    },
+
+                    success: function (json) {
+                        if (json['error']) {
+                            $('#nuvei_blocker').addClass('d-none');
+
+                            scFormFalse(json['error']);
+                        }
+
+                        if (json['redirect']) {
+                            location = json['redirect'];
+                        }
+                    },
+
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                    }
+                });
+
+                return;
+            }
+
+            if(resp.result == 'DECLINED') {
+                if (resp.hasOwnProperty('errorDescription')
+                    && 'insufficient funds' == resp.errorDescription.toLowerCase()
+                ) {
+                    scFormFalse("{{ error_insuff_funds }}");
+                    return;
+                }
+
+                scFormFalse("{{ nuvei_order_declined }}");
+                return;
+            }
+        }
+
+        console.error('Error with SDK response: ' + resp);
+
+        scFormFalse("{{ nuvei_order_error }}");
+    }
+
+    function scFormFalse(_errorMsg) {
+        $('#nuvei_error').find('div').html(_errorMsg);
+        $('#nuvei_error').removeClass('d-none');
+
+        // scroll to element
+        var element = document.getElementById('nuvei_error');
+        var headerOffset = 45;
+        var elementPosition = element.getBoundingClientRect().top;
+        var offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+        });
+    }
+
+    $(function() {
+        console.log('document loaded')
+        
+        // just load few containers
+        if ($('#nuvei_blocker').length == 0) {
+            $('main').append('<div id="nuvei_blocker" class="d-none" style="position: fixed; z-index: 999; width: 100%; height: 100%; top: 0; left: 0; background-color: rgba(255,255,255,0.6);"><div class="fa-3x text-center" style="margin-top: 50vh;"><i class="fas fa-circle-notch fa-spin"></i></div></div>');
+        }
+        
+        if ($('#nuvei_error').length == 0) {
+            $('div#content').append('<div class="alert alert-danger alert-dismissible fade show d-none" id="nuvei_error"><div></div></div>');
+        }
+        // /just load few containers
+
+        {% if nuvei_error is empty %}
+            // load the Checkout
+            if ($('#nuvei_checkout').length == 0) {
+                $('div#content').append('<div id="nuvei_checkout"><div class="fa-3x"><i class="fas fa-circle-notch fa-spin"></i></div></div>');
+            }
+
+            showNuveiCheckout();
+        {% else %}
+            // show error
+            var errorCont = $('div#content').find('#nuvei_error');
+            errorCont.find('div').text("{{ nuvei_error }}");
+            errorCont.removeClass('d-none');
+        {% endif %}
+    });
+</script>

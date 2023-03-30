@@ -1,0 +1,409 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+    <style type="text/css" media="all">
+        .nuvei_required:after {
+            content:" *";
+            color:red;
+        }
+    </style>
+    
+    <script>
+        function nuveiShowHideSecret() {
+            if ($('#nuvei_secret').attr('type') == 'password') {
+                $('#nuvei_secret').attr('type', 'text');
+            }
+            else if ($('#nuvei_secret').attr('type') == 'text') {
+                $('#nuvei_secret').attr('type', 'password');
+            }
+        }
+    </script>
+    
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="float-end">
+                <button type="submit" form="form-payment" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-save"></i></button>
+                
+                <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a>
+            </div>
+            
+            <h1>{{ heading_title }}</h1>
+            <ol class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                    <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% endfor %}
+            </ol>
+          </div>
+    </div>
+            
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-pencil"></i> {{ text_edit }}</div>
+            
+            <div class="card-body">
+                <form id="form-payment" action="{{ save }}" method="post" data-oc-toggle="ajax">
+                    <ul class="nav nav-tabs" id="nuveiTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#nuvei-general" type="button" role="tab" aria-controls="general-tab-pane" aria-selected="true">{{ text_general_tab }}</button>
+                        </li>
+                        
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#nuvei-advanced" type="button" role="tab" aria-controls="advanced-tab-pane" aria-selected="false">{{ text_advanced_tab }}</button>
+                        </li>
+                        
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#nuvei-tools" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">{{ text_tools_tab }}</button>
+                        </li>
+                    </ul>
+                  
+                    <div class="tab-content" id="nuveiTabContent">
+                        <!-- General Settings -->
+                        <div class="tab-pane fade show active" 
+                             id="nuvei-general" 
+                             role="tabpanel" 
+                             aria-labelledby="general-tab" 
+                             tabindex="0">
+                            
+                            <!-- Sandbox mode -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label nuvei_required">{{ entry_test_mode }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}test_mode" class="form-select" required="">
+                                        <option value="" {% if _context[nuvei_settings_prefix ~ 'test_mode']  == '' %} selected=""{% endif %}>{{ text_select_option }}</option>
+                                        <option value="1" {% if _context[nuvei_settings_prefix ~ 'test_mode']  == '1' %} selected=""{% endif %}>{{ text_yes }}</option>
+                                        <option value="0" {% if _context[nuvei_settings_prefix ~ 'test_mode']  == '0' %} selected=""{% endif %}>{{ text_no }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Merchant ID -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label nuvei_required">{{ entry_merchantId }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="{{ nuvei_settings_prefix }}merchantId" value="{{ _context[nuvei_settings_prefix ~ 'merchantId'] }}" class="form-control" pattern="[0-9]+" required="" />
+                                </div>
+                            </div>
+                                    
+                            <!-- Merchant Site ID -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label nuvei_required">{{ entry_merchantSiteId }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="{{ nuvei_settings_prefix }}merchantSiteId" value="{{ _context[nuvei_settings_prefix ~ 'merchantSiteId'] }}" class="form-control" pattern="[0-9]+" required="" />
+                                </div>
+                            </div>
+                                    
+                            <!-- Merchant Secret Key -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label nuvei_required">{{ entry_secret }}</label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        <input type="password" name="{{ nuvei_settings_prefix }}secret" id="nuvei_secret" value="{{ _context[nuvei_settings_prefix ~ 'secret'] }}" class="form-control" required="" autocomplete="false" />
+                                        <span class="input-group-text" onclick="nuveiShowHideSecret()"><i class="fa-solid fa-eye"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                                    
+                            <!-- Merchant Hash type -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label nuvei_required">{{ entry_hash }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}hash" class="form-select" required="">
+                                        <option value="" {% if _context[nuvei_settings_prefix ~ 'hash']  == '' %} selected=""{% endif %}>{{ text_select_option }}</option>
+                                        <option value="sha256" {% if _context[nuvei_settings_prefix ~ 'hash']  == 'sha256' %} selected=""{% endif %}>sha256</option>
+                                        <option value="md5" {% if _context[nuvei_settings_prefix ~ 'hash']  == 'md5' %} selected=""{% endif %}>md5</option>
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Payment Action -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label nuvei_required">{{ entry_payment_action }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}payment_action" class="form-select" required="">
+                                        <option value="" {% if _context[nuvei_settings_prefix ~ 'payment_action']  == '' %} selected=""{% endif %}>{{ text_select_option }}</option>
+                                        <option value="Sale" {% if _context[nuvei_settings_prefix ~ 'payment_action']  == 'Sale' %} selected=""{% endif %}>{{ text_sale_flow }}</option>
+                                        <option value="Auth" {% if _context[nuvei_settings_prefix ~ 'payment_action']  == 'Auth' %} selected=""{% endif %}>{{ text_auth_flow }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Save Logs -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label nuvei_required">{{ entry_create_logs }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}create_logs" class="form-select" required="">
+                                        <option value="" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == '' %} selected=""{% endif %}>{{ text_select_option }}</option>
+                                        <option value="single" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == 'single' %} selected=""{% endif %}>{{ text_single_file }}</option>
+                                        <option value="daily" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == 'daily' %} selected=""{% endif %}>{{ text_daily_files }}</option>
+                                        <option value="both" {% if _context[nuvei_settings_prefix ~ 'both_logs']  == 'daily' %} selected=""{% endif %}>{{ text_both_files }}</option>
+                                        <option value="no" {% if _context[nuvei_settings_prefix ~ 'no_logs']  == 'daily' %} selected=""{% endif %}>{{ text_no }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Geo Zone -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_geo_zone }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}geo_zone_id" class="form-select">
+                                        <option value="0">{{ text_all_zones }}</option>
+                                        {% for geo_zone in geo_zones %}
+                                            <option value="{{ geo_zone.geo_zone_id }}"{% if _context[nuvei_settings_prefix ~ 'geo_zone_i'] == geo_zone.geo_zone_id %} selected="selected"{% endif %}>{{ geo_zone.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Plugin Status -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_status }}</label>
+                                <div class="col-sm-10">
+                                    <div class="form-check form-switch form-switch-lg">
+                                        <input type="hidden" name="{{ nuvei_settings_prefix }}status" value="0"/>
+                                        <input type="checkbox" name="{{ nuvei_settings_prefix }}status" value="1" class="form-check-input"{% if _context[nuvei_settings_prefix ~ 'status'] %} checked{% endif %}/>
+                                    </div>
+                                </div>
+                            </div>
+                                    
+                            <!-- Sort Order -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_sort_order }}:</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="{{ nuvei_settings_prefix }}sort_order" value="{{ _context[nuvei_settings_prefix ~ 'sort_order'] }}" placeholder="{{ entry_sort_order }}" class="form-control"/>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /General Settings -->
+
+                        <!-- Advanced Settings -->
+                        <div class="tab-pane fade" id="nuvei-advanced" role="tabpanel" aria-labelledby="advanced-tab" tabindex="0">
+                            <!-- Complete Status -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_order_status }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}order_status_id" class="form-select">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == _context[nuvei_settings_prefix ~ 'order_status_id'] %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                                
+                            <!-- Pending Status -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_pending_status }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}pending_status_id" class="form-select">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == _context[nuvei_settings_prefix ~ 'pending_status_id'] %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Canceled Status -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_canceled_status }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}canceled_status_id" class="form-select">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == _context[nuvei_settings_prefix ~ 'canceled_status_id'] %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Failed Status -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_failed_status }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}failed_status_id" class="form-select">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == _context[nuvei_settings_prefix ~ 'failed_status_id'] %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Refunded Status -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_refunded_status }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}refunded_status_id" class="form-select">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == _context[nuvei_settings_prefix ~ 'refunded_status_id'] %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Change Order status on Update Order -->
+                            {#<div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_change_order_status }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}change_order_status" class="form-select">
+                                        <option value="0" {% if _context[nuvei_settings_prefix ~ 'change_order_status']  == 0 %} selected=""{% endif %}>{{ text_no }}</option>
+                                        <option value="1" {% if _context[nuvei_settings_prefix ~ 'change_order_status']  == 1 %} selected=""{% endif %}>{{ text_yes }}</option>
+                                    </select>
+                                    
+                                    <span class="form-text">{{ text_change_order_status }}</span>
+                                </div>
+                            </div>#}
+                            
+                            <!-- SDK version -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_sdk_version }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}sdk_version" class="form-select">
+                                        <option value="prod" {% if _context[nuvei_settings_prefix ~ 'sdk_version']  == 'prod' %} selected=""{% endif %}>{{ text_prod }}</option>
+                                        <option value="dev" {% if _context[nuvei_settings_prefix ~ 'sdk_version']  == 'dev' %} selected=""{% endif %}>{{ text_dev }}</option>
+                                    </select>
+                                    
+                                    <span class="form-text">{{ entry_sdk_version_help }}</span>
+                                </div>
+                            </div>
+                                
+                            <!-- DCC -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_dcc }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}use_dcc" class="form-select">
+                                        <option value="false" {% if _context[nuvei_settings_prefix ~ 'use_dcc']  == 'false' %} selected=""{% endif %}>{{ text_disable }}</option>
+                                        <option value="enable" {% if _context[nuvei_settings_prefix ~ 'use_dcc']  == 'enable' %} selected=""{% endif %}>{{ text_enable }}</option>
+                                        <option value="force" {% if _context[nuvei_settings_prefix ~ 'use_dcc']  == 'force' %} selected=""{% endif %}>{{ text_dcc_force }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Block cards -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_block_cards }}:</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="{{ nuvei_settings_prefix }}block_cards" value="{{ _context[nuvei_settings_prefix ~ 'block_cards'] }}" placeholder="{{ entry_sort_order }}" class="form-control" />
+                                    
+                                    <span class="form-text">{{ text_block_cards_help }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Block PMs -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_block_pms }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}block_pms[]" class="form-select" multiple="">
+                                        <option value="">{{ text_none }}</option>
+                                        {% for nuvei_pm in nuvei_pms %}
+                                            <option value="{{ nuvei_pm.code }}" "{% if nuvei_pm.selected == 1 %} selected="selected"{% endif %}>{{ nuvei_pm.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- UPOs -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_upos }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}use_upos" class="form-select">
+                                        <option value="0" {% if _context[nuvei_settings_prefix ~ 'use_upos']  == 0 %} selected=""{% endif %}>{{ text_dont_use_upos }}</option>
+                                        <option value="1" {% if _context[nuvei_settings_prefix ~ 'use_upos']  == 1 %} selected=""{% endif %}>{{ text_use_upos }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Pay button text -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_pay_button }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}pay_btn_text" class="form-select">
+                                        <option value="amountButton" {% if _context[nuvei_settings_prefix ~ 'pay_btn_text']  == 'amountButton' %} selected=""{% endif %}>{{ text_btn_amount }}</option>
+                                        <option value="textButton" {% if _context[nuvei_settings_prefix ~ 'pay_btn_text']  == 'textButton' %} selected=""{% endif %}>{{ text_btn_pm }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Auto expand PMs -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_auto_expand_pms }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}auto_expand_pms" class="form-select">
+                                        <option value="1" {% if _context[nuvei_settings_prefix ~ 'auto_expand_pms']  == 1 %} selected=""{% endif %}>{{ text_yes }}</option>
+                                        <option value="0" {% if _context[nuvei_settings_prefix ~ 'auto_expand_pms']  == 0 %} selected=""{% endif %}>{{ text_no }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Auto close APMs popup, only for Sandbox mode -->
+                            {% if _context[nuvei_settings_prefix ~ 'test_mode']  == 1 %}
+                                <div class="row mb-3">
+                                    <label class="col-sm-2 col-form-label">{{ entry_auto_close_apm_popup }}</label>
+                                    <div class="col-sm-10">
+                                        <select name="{{ nuvei_settings_prefix }}auto_close_apm_popup" class="form-select">
+                                            <option value="1" {% if _context[nuvei_settings_prefix ~ 'auto_close_apm_popup']  == 1 %} selected=""{% endif %}>{{ text_yes }}</option>
+                                            <option value="0" {% if _context[nuvei_settings_prefix ~ 'auto_close_apm_popup']  == 0 %} selected=""{% endif %}>{{ text_no }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Checkout SDK log level -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_sdk_log_level }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}sdk_log_level" class="form-select">
+                                        {% for i in range(0, 6) %}
+                                            <option value="{{ i }}" {% if _context[nuvei_settings_prefix ~ 'sdk_log_level']  == i %} selected=""{% endif %}>{{ i }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    
+                                    <span class="form-text">{{ text_log_level_help }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- SDK transaltions -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_sdk_transl }}</label>
+                                <div class="col-sm-10">
+                                    <textarea name="{{ nuvei_settings_prefix }}sdk_transl" class="form-control textarea-autosize" placeholder='{
+    "de": { 
+        "doNotHonor": "you dont have enough money",
+        "DECLINE": "declined"
+    },
+    "es": { 
+        "doNotHonor": "you dont have enough money",
+        "DECLINE": "declined"
+    }
+}'></textarea>
+                                    <span class="form-text">{{ text_sdk_transl_help }}</span>
+                                </div>
+                            </div>
+                                
+                            <!-- Rebilling Plan ID -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_rebilling_plan_id }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="{{ nuvei_settings_prefix }}plan_id" value="{{ _context[nuvei_settings_prefix ~ 'plan_id'] }}" class="form-control" pattern="[0-9]+" />
+                                    
+                                    <span class="form-text">{{ text_plan_id_help }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /Advanced Settings -->
+                        
+                        <!-- Help Tools -->
+                        <div class="tab-pane fade" id="nuvei-tools" role="tabpanel" aria-labelledby="tools-tab" tabindex="0">
+                            <!-- DMN URL -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_dmn_url }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" value="{{ nuvei_dmn_url }}" class="form-control" readonly />
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /Help Tools -->
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+                        
+{{ footer }}
