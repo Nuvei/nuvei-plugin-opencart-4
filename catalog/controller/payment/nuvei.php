@@ -538,59 +538,70 @@ class Nuvei extends \Opencart\System\Engine\Controller
 //            }
 //        }
         
-        $nuvei_last_oo_details = [];
+        $amount                 = $this->get_price($this->order_info['total']);
+        $rebilling_params       = $this->preprare_rebilling_params();
+        $try_update_order       = false;
+        $nuvei_last_oo_details  = [];
         
-        if (isset($this->session->data['nuvei_last_oo_details'])) {
-            $nuvei_last_oo_details = $this->session->data['nuvei_last_oo_details'];
+        if (isset($nuvei_last_oo_details)) {
+            $nuvei_last_oo_details = $nuvei_last_oo_details;
         }
                 
-        $rebilling_params = $this->preprare_rebilling_params();
-        
-        // try to update Order
+        # try to update Order
         if (! (empty($nuvei_last_oo_details['userTokenId']) 
             && !empty($rebilling_params['merchantDetails']['customField3']))
         ) {
-            $resp = $this->update_order();
+            $try_update_order = true;
+        }
+        
+        if (empty($nuvei_last_oo_details['transactionType'])) {
+            $try_update_order = false;
         }
         else {
-            \Nuvei_Class::create_log(
-                $this->plugin_settings, 
-                [
-                    '$nuvei_last_oo_details'    => $nuvei_last_oo_details,
-                    '$rebilling_params'         => $rebilling_params,
-                ],
-                'We need to call new openOrder.',
-                'DEBUG'
-            );
+            $session_tr_type = $nuvei_last_oo_details['transactionType'];
         }
         
-        if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-            if($is_ajax) {
-                $this->response->addHeader('Content-Type: application/json');
-                $this->response->setOutput(json_encode($resp));
-            }
-            
-			return $resp;
-		}
-        # /try to update Order
+        if ($amount == 0
+            && (empty($session_tr_type) || 'Auth' != $session_tr_type)
+        ) {
+            $try_update_order = false;
+        }
         
-        $amount = $this->get_price($this->order_info['total']);
+        if ($amount > 0
+            && !empty($session_tr_type)
+            && 'Auth' == $session_tr_type
+            && $session_tr_type != $this->plugin_settings['payment_action']
+        ) {
+            $try_update_order = false;
+        }
+        
+        if ($try_update_order) {
+            $resp = $this->update_order();
+            
+            if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
+                if($is_ajax) {
+                    $this->response->addHeader('Content-Type: application/json');
+                    $this->response->setOutput(json_encode($resp));
+                }
+
+                return $resp;
+            }
+        }
+        # /try to update Order
         
 		$oo_params = array(
 			'clientUniqueId'	=> $this->session->data['order_id'] . '_' . uniqid(),
             'clientRequestId'   => date('YmdHis', time()) . '_' . uniqid(),
 			'amount'            => $amount,
+            'transactionType'	=> (float) $amount == 0 ? 'Auth' : $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'payment_action'],
 			'currency'          => $this->order_info['currency_code'],
-			
+            'userDetails'       => $this->order_addresses['billingAddress'],
+			'billingAddress'	=> $this->order_addresses['billingAddress'],
+            'shippingAddress'   => $this->order_addresses['shippingAddress'],
 			'urlDetails'        => array(
 				'backUrl'			=> $this->url->link('checkout/checkout', '', true),
 				'notificationUrl'   => $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback'),
 			),
-			
-			'userDetails'       => $this->order_addresses['billingAddress'],
-			'billingAddress'	=> $this->order_addresses['billingAddress'],
-            'shippingAddress'   => $this->order_addresses['shippingAddress'],
-			'transactionType'	=> (float) $amount == 0 ? 'Auth' : $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'payment_action'],
 		);
 		
         // change urlDetails
@@ -635,6 +646,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         // set them to session for the check before submit the data to the webSDK
         $this->session->data['nuvei_last_oo_details']['amount']             = $oo_params['amount'];
+        $this->session->data['nuvei_last_oo_details']['transactionType']    = $oo_params['transactionType'];
         $this->session->data['nuvei_last_oo_details']['sessionToken']       = $resp['sessionToken'];
         $this->session->data['nuvei_last_oo_details']['clientRequestId']    = $resp['clientRequestId'];
         $this->session->data['nuvei_last_oo_details']['orderId']            = $resp['orderId'];
