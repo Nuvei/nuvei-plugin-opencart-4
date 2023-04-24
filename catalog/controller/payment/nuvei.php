@@ -543,10 +543,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $try_update_order       = false;
         $nuvei_last_oo_details  = [];
         
-        if (isset($nuvei_last_oo_details)) {
-            $nuvei_last_oo_details = $nuvei_last_oo_details;
+        if (isset($this->session->data['nuvei_last_oo_details'])) {
+            $nuvei_last_oo_details = $this->session->data['nuvei_last_oo_details'];
         }
-                
+        
         # try to update Order
         if (! (empty($nuvei_last_oo_details['userTokenId']) 
             && !empty($rebilling_params['merchantDetails']['customField3']))
