@@ -237,8 +237,18 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->model_setting_event->addEvent([
             'code'          => 'nuvei_product_subscr_data_mod',
             'description'   => 'On Checkout page into the Product Subscription data add date_next parameter if missing.',
-            'trigger'       => 'catalog/model/checkout/order/addOrder/before', 
+            'trigger'       => 'catalog/model/checkout/order/addOrder/before',
             'action'        => 'extension/nuvei/payment/nuvei|event_check_subsc_data',
+            'status'        => 1,
+            'sort_order'    => 1,
+        ]);
+        
+        // filter payment providers on the checkout page
+        $this->model_setting_event->addEvent([
+            'code'          => 'nuvei_filter_payment_providers',
+            'description'   => 'On Checkout page remove all payment providers if there is a product with Nuvei Payment Plan.',
+            'trigger'       => 'catalog/model/checkout/payment_method/getMethods/after',
+            'action'        => 'extension/nuvei/payment/nuvei|event_filter_payment_providers',
             'status'        => 1,
             'sort_order'    => 1,
         ]);

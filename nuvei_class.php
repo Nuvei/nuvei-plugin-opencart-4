@@ -371,8 +371,6 @@ class Nuvei_Class
     }
     
     /**
-     * function get_param
-     * 
      * Helper function to safety access request parameters
      * 
      * @param type $name

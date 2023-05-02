@@ -122,7 +122,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
         if($subscriptions > 0) {
             $data['nuvei_sdk_params']['pmWhitelist'][] = 'cc_card';
             unset($data['nuvei_sdk_params']['pmBlacklist']);
+            
+            $data['is_nuvei_rebilling'] = 1;
         }
+        
+        $data['NUVEI_PLUGIN_CODE'] = NUVEI_PLUGIN_CODE;
         
         \Nuvei_Class::create_log($data['nuvei_sdk_params'], 'nuvei_sdk_params');
         
@@ -303,6 +307,34 @@ class Nuvei extends \Opencart\System\Engine\Controller
 
                 $args[$key]['products'][$key2]['subscription']['date_next'] = $date_next;
             }
+        }
+    }
+    
+    public function event_filter_payment_providers(&$route, &$data, &$methods)
+    {
+//        $this->load_settings();
+//        
+//        \Nuvei_Class::create_log($this->plugin_settings, $methods, 'event_filter_payment_providers');
+        
+        $rebilling_data     = $this->cart->getSubscription();
+        $remove_providers   = false;
+        
+        if(count($rebilling_data) > 0) {
+            foreach($rebilling_data as $reb_data) {
+                // check for nuvei into subscription name
+                if (strpos(strtolower($reb_data['subscription']['name']), NUVEI_PLUGIN_CODE) !== false) {
+                    $remove_providers = true;
+                    break;
+                }
+        
+            }
+        }
+        
+        if ($remove_providers && isset($methods[NUVEI_PLUGIN_CODE])) {
+            $methods = [
+                NUVEI_PLUGIN_CODE => $methods[NUVEI_PLUGIN_CODE]
+            ];
+            
         }
     }
     
@@ -1105,7 +1137,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
      * @param string    $msg
      * @param mixed     $data
      */
-    private function return_message($msg, $data = '') {
+    private function return_message($msg, $data = '')
+    {
         if(!is_string($msg)) {
             $msg = json_encode($msg);
         }
