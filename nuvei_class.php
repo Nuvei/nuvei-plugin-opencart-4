@@ -29,7 +29,7 @@ const NUVEI_TOKEN_NAME          = 'user_token';
 const NUVEI_CONTROLLER_PATH     = 'extension/nuvei/payment/nuvei';
 
 const NUVEI_SETTINGS_PREFIX     = 'payment_nuvei_';
-const NUVEI_SOURCE_APP          = 'OPENCART_4_PLUGIN';
+const NUVEI_SOURCE_APP          = 'openCart 3.0 Plugin';
 
 //const NUVEI_ADMIN_TXT_EXT_KEY =    'text_extension';
 const NUVEI_ADMIN_EXT_URL       = 'marketplace/extension';
@@ -196,7 +196,7 @@ class Nuvei_Class
                 'merchantId'        => $settings[NUVEI_SETTINGS_PREFIX . 'merchantId'],
                 'merchantSiteId'    => $settings[NUVEI_SETTINGS_PREFIX . 'merchantSiteId'],
                 'timeStamp'         => $time,
-                'webMasterId'       => 'OpenCart ' . VERSION,
+                'webMasterId'       => 'OpenCart ' . VERSION . '; Plugin v' . NUVEI_PLUGIN_V,
                 'sourceApplication' => NUVEI_SOURCE_APP,
                 
                 'merchantDetails'	=> array(
