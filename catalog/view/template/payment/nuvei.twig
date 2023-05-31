@@ -2,6 +2,8 @@
     function showNuveiCheckout() {
         console.log('showNuveiCheckout()');
 
+        $('#nuvei_checkout').show();
+
         nuveiCheckoutSdkParams              = {{ nuvei_sdk_params|json_encode() }};
         nuveiCheckoutSdkParams.prePayment   = nuveiPrePayment;
         nuveiCheckoutSdkParams.onResult     = nuveiAfterSdkResponse;
@@ -130,7 +132,15 @@
     }
 
     $(function() {
-        console.log('document loaded')
+        console.log('document loaded');
+        
+        $('#input-payment-method').on('change', function() {
+            let _self = $(this);
+
+            if (_self.val() != '{{ NUVEI_PLUGIN_CODE }}') {
+                $('#nuvei_checkout').hide();
+            }
+        });
         
         // just load few containers
         if ($('#nuvei_blocker').length == 0) {
@@ -147,7 +157,7 @@
             if ($('#nuvei_checkout').length == 0) {
                 $('div#content').append('<div id="nuvei_checkout"><div class="fa-3x"><i class="fas fa-circle-notch fa-spin"></i></div></div>');
             }
-
+            
             showNuveiCheckout();
         {% else %}
             // show error

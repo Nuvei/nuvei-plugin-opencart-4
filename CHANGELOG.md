@@ -5,6 +5,7 @@
 # 1.3
 ```
     * Changed sourceApplication and webMasterId parameters values.
+    * Fix for the case when on the checkout page, the client choose Nuvei, then another payent provider, and Nuvei payment options stay visible.
 ```
 
 # 1.2
