@@ -3,7 +3,7 @@
         console.log('showNuveiCheckout()');
 
         $('#nuvei_checkout').show();
-
+        
         nuveiCheckoutSdkParams              = {{ nuvei_sdk_params|json_encode() }};
         nuveiCheckoutSdkParams.prePayment   = nuveiPrePayment;
         nuveiCheckoutSdkParams.onResult     = nuveiAfterSdkResponse;
