@@ -548,7 +548,7 @@ class Nuvei_Class
         $json_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'install.json';
         
         if (is_readable($json_file)) {
-            $json_arr = json_decode($json_file, true);
+            $json_arr = json_decode(file_get_contents($json_file), true);
             
             if (is_array($json_arr) && !empty($json_arr['version'])) {
                 return $json_arr['version'];
