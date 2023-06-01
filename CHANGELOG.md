@@ -7,6 +7,7 @@
     * Changed sourceApplication and webMasterId parameters values.
     * Fix for the case when on the checkout page, the client choose Nuvei, then another payent provider, and Nuvei payment options stay visible.
     * Removed NUVEI_PLUGIN_V constant. Now will get the plugin version from the install.json.
+    * Fix for Nuvei_Class calls to create_log method. Added the missing plugin settings parameter.
 ```
 
 # 1.2

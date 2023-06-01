@@ -172,7 +172,7 @@ class Nuvei_Class
         $url = self::get_endpoint_base($settings) . $method . '.do';
 		
 		if(!is_array($params)) {
-			self::create_log($params, 'callRestApi() Error - the passed params parameter is not array.');
+			self::create_log($settings, 'callRestApi() Error - the passed params parameter is not array.');
 			return array(
                 'status'    => 'ERROR',
                 'msg'       => 'call_rest_api() Error - the passed params parameter is not array.'
@@ -180,7 +180,7 @@ class Nuvei_Class
 		}
         
         if(empty($settings[NUVEI_SETTINGS_PREFIX . 'hash'])) {
-            self::create_log($params, 'callRestApi() Error - the hash params parameter is empty.');
+            self::create_log($settings, 'callRestApi() Error - the hash params parameter is empty.');
             return array(
                 'status'    => 'ERROR',
                 'msg'       => 'call_rest_api() Error - the hash params parameter is empty.'
@@ -202,7 +202,7 @@ class Nuvei_Class
 					'customField2' => $time, // time when we create request
 				),
                 
-                'deviceDetails'     => self::get_device_details(),
+                'deviceDetails'     => self::get_device_details($settings),
             ),
             $params
         );
@@ -234,7 +234,7 @@ class Nuvei_Class
         // /calculate the checksum
         
         // validate parameters
-        $params = self::validate_params($params);
+        $params = self::validate_params($params, $settings);
         
         if(isset($params['status']) && 'ERROR' == $params['status']) {
             return $params;
@@ -279,93 +279,10 @@ class Nuvei_Class
 			return $resp_arr;
         }
         catch(Exception $e) {
-            self::create_log($e->getMessage(), 'Call REST API Exception');
+            self::create_log($settings, $e->getMessage(), 'Call REST API Exception');
 			
             return array('status' => 'ERROR');
         }
-    }
-    
-    /**
-     * Function get_device_details
-	 * 
-     * Get browser and device based on HTTP_USER_AGENT.
-     * The method is based on D3D payment needs.
-     * 
-     * @return array $device_details
-     */
-    public static function get_device_details()
-    {
-        $device_details = array(
-            'deviceType'    => 'UNKNOWN', // DESKTOP, SMARTPHONE, TABLET, TV, and UNKNOWN
-            'deviceName'    => 'UNKNOWN',
-			'deviceOS'      => 'UNKNOWN',
-			'browser'       => 'UNKNOWN',
-			'ipAddress'     => '0.0.0.0',
-        );
-        
-        if(empty($_SERVER['HTTP_USER_AGENT'])) {
-			$device_details['Warning'] = 'User Agent is empty.';
-			
-			self::create_log($device_details['Warning'], 'get_device_details() Error');
-			return $device_details;
-		}
-		
-		$user_agent = strtolower($_SERVER['HTTP_USER_AGENT']);
-		
-		if (empty($user_agent)) {
-			$device_details['Warning'] = 'Probably the merchant Server has problems with PHP filter_var function!';
-			
-			self::create_log($device_details['Warning'], 'get_device_details() Error');
-			return $device_details;
-		}
-		
-		$device_details['deviceName'] = $user_agent;
-		
-        foreach (self::$device_types as $d) {
-            if (strstr($user_agent, $d) !== false) {
-                if(in_array($d, array('linux', 'windows', 'macintosh'), true)) {
-                    $device_details['deviceType'] = 'DESKTOP';
-                } else if('mobile' === $d) {
-                    $device_details['deviceType'] = 'SMARTPHONE';
-                } else if('tablet' === $d) {
-                    $device_details['deviceType'] = 'TABLET';
-                } else {
-                    $device_details['deviceType'] = 'TV';
-                }
-
-                break;
-            }
-        }
-
-        foreach (self::$devices as $d) {
-            if (strstr($user_agent, $d) !== false) {
-                $device_details['deviceOS'] = $d;
-                break;
-            }
-        }
-
-        foreach (self::$browsers as $b) {
-            if (strstr($user_agent, $b) !== false) {
-                $device_details['browser'] = $b;
-                break;
-            }
-        }
-
-        // get ip
-		if (!empty($_SERVER['REMOTE_ADDR'])) {
-			$ip_address = filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP);
-		}
-		if (empty($ip_address) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			$ip_address = filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP);
-		}
-		if (empty($ip_address) && !empty($_SERVER['HTTP_CLIENT_IP'])) {
-			$ip_address = filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP);
-		}
-		if (!empty($ip_address)) {
-			$device_details['ipAddress'] = (string) $ip_address;
-		}
-            
-        return $device_details;
     }
     
     /**
@@ -559,6 +476,90 @@ class Nuvei_Class
     }
     
     /**
+     * Function get_device_details
+	 * 
+     * Get browser and device based on HTTP_USER_AGENT.
+     * The method is based on D3D payment needs.
+     * 
+     * @param array $settings
+     * @return array $device_details
+     */
+    private static function get_device_details($settings)
+    {
+        $device_details = array(
+            'deviceType'    => 'UNKNOWN', // DESKTOP, SMARTPHONE, TABLET, TV, and UNKNOWN
+            'deviceName'    => 'UNKNOWN',
+			'deviceOS'      => 'UNKNOWN',
+			'browser'       => 'UNKNOWN',
+			'ipAddress'     => '0.0.0.0',
+        );
+        
+        if(empty($_SERVER['HTTP_USER_AGENT'])) {
+			$device_details['Warning'] = 'User Agent is empty.';
+			
+			self::create_log($settings, $device_details['Warning'], 'get_device_details Error');
+			return $device_details;
+		}
+		
+		$user_agent = strtolower($_SERVER['HTTP_USER_AGENT']);
+		
+		if (empty($user_agent)) {
+			$device_details['Warning'] = 'Probably the merchant Server has problems with PHP filter_var function!';
+			
+			self::create_log($settings, $device_details['Warning'], 'get_device_details Error');
+			return $device_details;
+		}
+		
+		$device_details['deviceName'] = $user_agent;
+		
+        foreach (self::$device_types as $d) {
+            if (strstr($user_agent, $d) !== false) {
+                if(in_array($d, array('linux', 'windows', 'macintosh'), true)) {
+                    $device_details['deviceType'] = 'DESKTOP';
+                } else if('mobile' === $d) {
+                    $device_details['deviceType'] = 'SMARTPHONE';
+                } else if('tablet' === $d) {
+                    $device_details['deviceType'] = 'TABLET';
+                } else {
+                    $device_details['deviceType'] = 'TV';
+                }
+
+                break;
+            }
+        }
+
+        foreach (self::$devices as $d) {
+            if (strstr($user_agent, $d) !== false) {
+                $device_details['deviceOS'] = $d;
+                break;
+            }
+        }
+
+        foreach (self::$browsers as $b) {
+            if (strstr($user_agent, $b) !== false) {
+                $device_details['browser'] = $b;
+                break;
+            }
+        }
+
+        // get ip
+		if (!empty($_SERVER['REMOTE_ADDR'])) {
+			$ip_address = filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP);
+		}
+		if (empty($ip_address) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+			$ip_address = filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP);
+		}
+		if (empty($ip_address) && !empty($_SERVER['HTTP_CLIENT_IP'])) {
+			$ip_address = filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP);
+		}
+		if (!empty($ip_address)) {
+			$device_details['ipAddress'] = (string) $ip_address;
+		}
+            
+        return $device_details;
+    }
+    
+    /**
 	 * Get the URL to the endpoint, without the method name, based on the site mode.
 	 * 
      * @param array $settings The plugin settings.
@@ -579,15 +580,17 @@ class Nuvei_Class
      * Just move out the validation outside of call_rest_api method.
      * 
      * @param array $params
+     * @param array $settings Plugin settings.
+     * 
      * @return array $params
      */
-    private static function validate_params(array $params)
+    private static function validate_params(array $params, $settings)
     {
 		# validate parameters
 		// directly check the mails
 		if(isset($params['billingAddress']['email'])) {
 			if(!filter_var($params['billingAddress']['email'], self::$params_validation_email['flag'])) {
-				self::create_log('call_rest_api() Error - Billing Address Email is not valid.');
+				self::create_log($settings, 'call_rest_api() Error - Billing Address Email is not valid.');
 				
 				return array(
 					'status' => 'ERROR',
@@ -596,7 +599,7 @@ class Nuvei_Class
 			}
 			
 			if(strlen($params['billingAddress']['email']) > self::$params_validation_email['length']) {
-				self::create_log('call_rest_api() Error - Billing Address Email is too long');
+				self::create_log($settings, 'call_rest_api() Error - Billing Address Email is too long');
 				
 				return array(
 					'status' => 'ERROR',
@@ -607,7 +610,7 @@ class Nuvei_Class
 		
 		if(isset($params['shippingAddress']['email'])) {
 			if(!filter_var($params['shippingAddress']['email'], self::$params_validation_email['flag'])) {
-				self::create_log('call_rest_api() Error - Shipping Address Email is not valid.');
+				self::create_log($settings, 'call_rest_api() Error - Shipping Address Email is not valid.');
 				
 				return array(
 					'status' => 'ERROR',
@@ -616,7 +619,7 @@ class Nuvei_Class
 			}
 			
 			if(strlen($params['shippingAddress']['email']) > self::$params_validation_email['length']) {
-				self::create_log('call_rest_api() Error - Shipping Address Email is too long.');
+				self::create_log($settings, 'call_rest_api() Error - Shipping Address Email is too long.');
 				
 				return array(
 					'status' => 'ERROR',
@@ -633,7 +636,7 @@ class Nuvei_Class
                 if (mb_strlen($val1) > self::$params_validation[$key1]['length']) {
                     $new_val = mb_substr($val1, 0, self::$params_validation[$key1]['length']);
                     
-                    self::create_log($key1, 'Limit');
+                    self::create_log($settings, $key1, 'Limit');
                 }
                 
                 if (isset(self::$params_validation[$key1]['flag'])) {
@@ -648,7 +651,7 @@ class Nuvei_Class
                         if (mb_strlen($val2) > self::$params_validation[$key2]['length']) {
                             $new_val = mb_substr($val2, 0, self::$params_validation[$key2]['length']);
                             
-                            self::create_log($key2, 'Limit');
+                            self::create_log($settings, $key2, 'Limit');
                         }
 
                         if (isset(self::$params_validation[$key2]['flag'])) {
