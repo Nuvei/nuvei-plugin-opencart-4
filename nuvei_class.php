@@ -8,7 +8,6 @@
  * @author Nuvei
  */
 
-const NUVEI_PLUGIN_V            = '1.2';
 const NUVEI_PLUGIN_CODE         = 'nuvei';
 const NUVEI_PLUGIN_TITLE        = 'Nuvei';
 
@@ -196,11 +195,10 @@ class Nuvei_Class
                 'merchantId'        => $settings[NUVEI_SETTINGS_PREFIX . 'merchantId'],
                 'merchantSiteId'    => $settings[NUVEI_SETTINGS_PREFIX . 'merchantSiteId'],
                 'timeStamp'         => $time,
-                'webMasterId'       => 'OpenCart ' . VERSION . '; Plugin v' . NUVEI_PLUGIN_V,
+                'webMasterId'       => 'OpenCart ' . VERSION . '; Plugin v' . self::get_plugin_version(),
                 'sourceApplication' => NUVEI_SOURCE_APP,
                 
                 'merchantDetails'	=> array(
-					'customField1' => NUVEI_SOURCE_APP . ' ' . NUVEI_PLUGIN_V,
 					'customField2' => $time, // time when we create request
 				),
                 
@@ -450,7 +448,7 @@ class Nuvei_Class
         }
         
         $machine_name       = '';
-        $service_name       = NUVEI_SOURCE_APP . ' ' . NUVEI_PLUGIN_V . '|';
+        $service_name       = NUVEI_SOURCE_APP . ' ' . self::get_plugin_version() . '|';
         $source_file_name   = '';
         $member_name        = '';
         $source_line_number = '';
@@ -541,6 +539,24 @@ class Nuvei_Class
 		}
 		catch (Exception $exc) {}
 	}
+    
+    /**
+     * @return string
+     */
+    public static function get_plugin_version()
+    {
+        $json_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'install.json';
+        
+        if (is_readable($json_file)) {
+            $json_arr = json_decode($json_file, true);
+            
+            if (is_array($json_arr) && !empty($json_arr['version'])) {
+                return $json_arr['version'];
+            }
+        }
+        
+        return '';
+    }
     
     /**
 	 * Get the URL to the endpoint, without the method name, based on the site mode.

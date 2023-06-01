@@ -819,8 +819,13 @@ class Nuvei extends \Opencart\System\Engine\Controller
             ]));
         }
         
-        $git_v  = (int) str_replace('.', '', trim($matches[1]));
-        $curr_v = (int) str_replace('.', '', NUVEI_PLUGIN_V);
+        $plugin_v   = \Nuvei_Class::get_plugin_version();
+        $git_v      = (int) str_replace('.', '', trim($matches[1]));
+        $curr_v     = 0;
+        
+        if (!empty($plugin_v)) {
+            $curr_v = (int) str_replace('.', '', $plugin_v);
+        }
         
         if($git_v <= $curr_v) {
             exit(json_encode([
