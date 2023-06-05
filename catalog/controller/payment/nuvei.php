@@ -3,6 +3,7 @@
 namespace Opencart\Catalog\Controller\Extension\Nuvei\Payment;
 
 require_once DIR_EXTENSION . DIRECTORY_SEPARATOR . 'nuvei' . DIRECTORY_SEPARATOR . 'nuvei_class.php';
+require_once DIR_EXTENSION . DIRECTORY_SEPARATOR . 'nuvei' . DIRECTORY_SEPARATOR . 'nuvei_version_resolver.php';
 
 /**
  * @author Nuvei
@@ -81,42 +82,46 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $save_pm = 'always';
         }
         
+        $test_mode = $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'test_mode'];
+        
         $data['nuvei_sdk_params'] = [
-            'renderTo'               => '#nuvei_checkout',
-            'strict'                 => false,
-            'alwaysCollectCvv'       => true,
-            'maskCvv'                => true,
-            'showResponseMessage'    => false,
-            'sessionToken'           => $order_data['sessionToken'],
-            'env'                    => 1 == $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'test_mode'] ? 'test' : 'prod',
-            'merchantId'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'merchantId'],
-            'merchantSiteId'         => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'merchantSiteId'],
-            'country'                => $order_data['billingAddress']['country'],
-            'currency'               => $order_data['currency'],
-            'amount'                 => $order_data['amount'],
-            'useDCC'                 => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_dcc'],
-            'savePM'                 => $save_pm,
-            'showUserPaymentOptions' => $use_upos,
-            'pmWhitelist'            => null,
-            'pmBlacklist'            => $pm_black_list,
-            'email'                  => $order_data['billingAddress']['email'],
-            'fullName'               => trim($order_data['billingAddress']['firstName'] 
+            'renderTo'                  => '#nuvei_checkout',
+            'strict'                    => false,
+            'alwaysCollectCvv'          => true,
+            'maskCvv'                   => true,
+            'showResponseMessage'       => false,
+            'sessionToken'              => $order_data['sessionToken'],
+            'env'                       => 1 == $test_mode ? 'test' : 'prod',
+            'merchantId'                => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'merchantId'],
+            'merchantSiteId'            => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'merchantSiteId'],
+            'country'                   => $order_data['billingAddress']['country'],
+            'currency'                  => $order_data['currency'],
+            'amount'                    => $order_data['amount'],
+            'useDCC'                    => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_dcc'],
+            'savePM'                    => $save_pm,
+            'showUserPaymentOptions'    => $use_upos,
+            'pmWhitelist'               => null,
+            'pmBlacklist'               => $pm_black_list,
+            'email'                     => $order_data['billingAddress']['email'],
+            'fullName'                  => trim($order_data['billingAddress']['firstName'] 
                 . ' ' . $order_data['billingAddress']['lastName']),
-            'payButton'              => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'pay_btn_text'],
-            'locale'                 => substr($this->get_locale(), 0, 2),
-            'autoOpenPM'             => (bool) $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_expand_pms'],
-            'logLevel'               => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_log_level'],
-            'i18n'                   => json_decode($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_transl'], true),
+            'payButton'                 => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'pay_btn_text'],
+            'locale'                    => substr($this->get_locale(), 0, 2),
+            'autoOpenPM'                => (bool) $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_expand_pms'],
+            'logLevel'                  => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_log_level'],
+            'i18n'                      => json_decode($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_transl'], true),
 //            'billingAddress'         => $order_data['billingAddress'],
 //            'userData'               => ['billingAddress' => $order_data['billingAddress']],
+            
         ];
         
         $data['language']               = $this->config->get('config_language');
         $data['NUVEI_CONTROLLER_PATH']  = NUVEI_CONTROLLER_PATH;
+        $data['sdkUrl']                 = NUVEI_SDK_URL_PROD;
         
-        if('prod' != $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_version']) {
-            $data['nuvei_sdk_params']['webSdkEnv'] = 'dev';
-        }
+//        if('prod' != $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_version']) {
+//            $data['nuvei_sdk_params']['webSdkEnv'] = 'dev';
+//        }
         
         // check for product with a plan
         if($subscriptions > 0) {
@@ -126,7 +131,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $data['is_nuvei_rebilling'] = 1;
         }
         
-        $data['NUVEI_PLUGIN_CODE'] = NUVEI_PLUGIN_CODE;
+        $data['NUVEI_PLUGIN_CODE']  = NUVEI_PLUGIN_CODE;
+        $data['ocVersionInt']       = (int) str_replace('.', '', VERSION);
         
         \Nuvei_Class::create_log($data['nuvei_sdk_params'], 'nuvei_sdk_params');
         
@@ -141,14 +147,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         $this->load_settings();
         
-        if (empty($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_version'])
-            || 'prod' == $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_version']
-        ) {
-            $this->document->addScript(NUVEI_SDK_URL_PROD);
-        }
-        else {
-            $this->document->addScript(NUVEI_SDK_URL_INT);
-        }
+        \Nuvei_Class::create_log($this->plugin_settings, 'event_add_sdk_lib');
+        
+        $this->document->addScript(NUVEI_SDK_URL_PROD);
+//        $this->document->addScript('extension/nuvei/catalog/view/javascript/nuvei_checkout.js');
     }
     
     /**
@@ -159,6 +161,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
      */
     public function event_before_add_product(): void
     {
+        $this->load_settings();
+        
+        \Nuvei_Class::create_log($this->plugin_settings, 'event_before_add_product');
+        
         // in case there is no incoming product
         if (empty($this->request->post['product_id'])) {
             return;
@@ -207,9 +213,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             // 2.2. incoming product does not have Nuvei Subs plan. Check for Nuvei plan into the cart
             foreach ($products as $product) {
                 if (!empty($product['subscription']['name'])
-                    && false !== \Opencart\System\Helper\Utf8\strpos(\Opencart\System\Helper\Utf8\strtolower(
-                        $product['subscription']['name']), 'nuvei'
-                    )
+                    && false !== strpos(strtolower($product['subscription']['name']), 'nuvei')
                 ) {
                     $json['nuvei_add_product_error'] = $this->language->get('error_nuvei_subs_prod');
                     break;
@@ -233,6 +237,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
     public function event_add_product_mod()
     {
         $this->document->addScript('/extension/nuvei/catalog/view/javascript/nuvei_product_mod.js', 'footer');
+        
+        if (4020 >= \Nuvei_Class::get_plugin_version()) {
+            $this->document->addScript('/extension/nuvei/catalog/view/javascript/nuvei_hide_sdk_container.js', 'footer');
+        }
     }
     
     public function event_check_subsc_data(&$route, &$args)
@@ -312,9 +320,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
     
     public function event_filter_payment_providers(&$route, &$data, &$methods)
     {
-//        $this->load_settings();
-//        
-//        \Nuvei_Class::create_log($this->plugin_settings, $methods, 'event_filter_payment_providers');
+        $this->load_settings();
+        
+        \Nuvei_Class::create_log($this->plugin_settings, $methods, 'event_filter_payment_providers');
         
         $rebilling_data     = $this->cart->getSubscription();
         $remove_providers   = false;
@@ -343,24 +351,42 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->load_settings();
         $this->load->language(NUVEI_CONTROLLER_PATH);
         
-        \Nuvei_Class::create_log([$this->plugin_settings, $this->request->post], 'confirm page');
+        \Nuvei_Class::create_log($this->plugin_settings, $this->request->post, 'confirm page');
 
 		$json = [];
 
         // set errors
 		if (!isset($this->session->data['order_id'])) {
+            \Nuvei_Class::create_log($this->plugin_settings, 'Missing session order_id.');
+            
 			$json['error'] = $this->language->get('error_order_id');
 		}
 
-		if (!isset($this->session->data['payment_method']) 
-            || NUVEI_PLUGIN_CODE != $this->session->data['payment_method']
-        ) {
+        if (empty($this->session->data['payment_method'])) {
+            \Nuvei_Class::create_log($this->plugin_settings, 'Session Payment method is empty.');
+            
+			$json['error'] = $this->language->get('error_payment_method');
+        }
+        
+        // expected "nuvei" or "nuvei.nuvei"
+		if (false === strpos($this->session->data['payment_method']['code'], NUVEI_PLUGIN_CODE)) {
+            \Nuvei_Class::create_log(
+                $this->plugin_settings,
+                [
+                    'NUVEI_PLUGIN_CODE'         => NUVEI_PLUGIN_CODE,
+                    'session payment_method'    => $this->session->data['payment_method'],
+                ],
+                'Payment method is incorrect.'
+            );
+            
 			$json['error'] = $this->language->get('error_payment_method');
 		}
         
         if(empty($this->request->post['nuvei_tr_id'])
             || !is_numeric($this->request->post['nuvei_tr_id'])
 		) {
+            \Nuvei_Class::create_log($this->plugin_settings, 'nuvei_tr_id is empty or missing.');
+            
 			$json['error'] = $this->language->get('error_missing_tr_id');
 		}
         // /set errors
@@ -368,8 +394,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		if (!$json) {
 			$this->load->model('checkout/order');
             
-            $this->order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
-        
+//            $this->order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+            
 //            if(isset($this->order_info['order_status_id'])
 //                && (int) $this->order_info['order_status_id'] == 0
 //            ) {
@@ -381,10 +407,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
 //                );
 //            }
 //            else {
-//                $this->model_checkout_order->addHistory(
-//                    $this->session->data['order_id'], 
-//                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
-//                );
+                $this->model_checkout_order->addHistory(
+                    $this->session->data['order_id'], 
+                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
+                );
 //            }
 
             $this->session->data['nuvei_last_oo_details'] = [];
@@ -409,10 +435,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->load_settings();
         $this->load->model('checkout/order');
         
-        \Nuvei_Class::create_log($this->plugin_settings, @$this->request->request, 'DMN request');
+        \Nuvei_Class::create_log($this->plugin_settings, $_REQUEST, 'DMN request');
         
         ### Manual stop DMN is possible only in test mode
-//      \Nuvei_Class::create_log($this->plugin_settings, http_build_query(@$this->request->request), 'DMN request query');
+//      \Nuvei_Class::create_log($this->plugin_settings, http_build_query($_REQUEST), 'DMN request query');
 //      die('manually stoped');
         ### Manual stop DMN END
         
@@ -739,8 +765,15 @@ class Nuvei extends \Opencart\System\Engine\Controller
 
             \Nuvei_Class::create_log(
                 $this->plugin_settings,
+                [
+                    'checksum string' => \Nuvei_Class::get_param('totalAmount')
+                        . \Nuvei_Class::get_param('currency')
+                        . \Nuvei_Class::get_param('responseTimeStamp')
+                        . \Nuvei_Class::get_param('PPP_TransactionID')
+                        . $this->get_request_status()
+                        . \Nuvei_Class::get_param('productId')
+                ],
                 'advanceResponseChecksum validation fail.',
-                '',
                 'WARN'
             );
             return false;
@@ -748,7 +781,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		
 		# subscription DMN with responsechecksum case
 		$concat        = '';
-		$request_arr   = $this->request->request;
+		$request_arr   = $_REQUEST;
 		$custom_params = array(
 			'route'             => '',
 			'responsechecksum'  => '',
@@ -785,12 +818,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
     private function get_request_status($params = array())
     {
         if(empty($params)) {
-            if(isset($this->request->request['Status'])) {
-                return $this->request->request['Status'];
+            if(isset($_REQUEST['Status'])) {
+                return $_REQUEST['Status'];
             }
 
-            if(isset($this->request->request['status'])) {
-                return $this->request->request['status'];
+            if(isset($_REQUEST['status'])) {
+                return $_REQUEST['status'];
             }
         }
         else {
@@ -1105,7 +1138,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
 			],
         );
         
-        $address = $this->model_account_address->getAddresses(); // get address by user id
+        $customer_id = !empty($this->session->data['customer_id']) ? $this->session->data['customer_id'] : 0;
+        
+        /**
+         * @since 4.0.2.1 have to pass $customer_id in the bottom method
+         */
+        $address = $this->model_account_address->getAddresses($customer_id); // get address by user id
         
         if (empty($this->order_info['payment_firstname']) 
             && !empty($address) 
@@ -1267,11 +1305,17 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $this->return_message('DMN error - There is no order info, invalid Order ID.');
         }
         
-        // check for Nuvei Order
-        if(@$this->order_info['payment_code'] != 'nuvei') {
+        $isNuveiOrder = \Nuvei_Version_Resolver::check_for_nuvei_order($this->order_info);
+        
+        if (!$isNuveiOrder) {
+            \Nuvei_Class::create_log(
+                $this->plugin_settings,
+                $this->order_info,
+            );
+            
             $this->return_message('DMN error - the Order does not belongs to the Nuvei.');
         }
-
+        
         // success
         return;
     }
@@ -1612,19 +1656,19 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'process_subs_state order_info');
         
-        $dmnType = $this->request->request['dmnType'] ?? '';
+        $dmnType = $_REQUEST['dmnType'] ?? '';
         
         if ('subscription' != $dmnType) {
             return;
         }
             
-        $subscriptionState = $this->request->request['subscriptionState'] ?? '';
+        $subscriptionState = $_REQUEST['subscriptionState'] ?? '';
 
         if (empty($subscriptionState)) {
             $this->return_message('Subscription DMN missing subscriptionState. Stop the process.');
         }
 
-        $subscriptionId = (int) ($this->request->request['subscriptionId'] ?? 0);
+        $subscriptionId = (int) ($_REQUEST['subscriptionId'] ?? 0);
         $this->get_order_info_by_dmn();
         
         if(!$this->order_info || empty($this->order_info)) {
@@ -1726,11 +1770,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'process_subs_payment()');
         
-        $dmnType        =  $this->request->request['dmnType'] ?? '';
-        $trans_id       = (int) $this->request->request['TransactionID'] ?? 0;
-        $planId         = (int) $this->request->request['planId'] ?? 0;
-        $subscriptionId = (int) $this->request->request['subscriptionId'] ?? 0;
-        $totalAmount    = (float) $this->request->request['totalAmount'] ?? 0;
+        $dmnType        =  isset($_REQUEST['dmnType']) ? $_REQUEST['dmnType'] : '';
+        $trans_id       = isset($_REQUEST['TransactionID']) ? (int) $_REQUEST['TransactionID'] : 0;
+        $planId         = isset($_REQUEST['planId']) ? (int) $_REQUEST['planId'] : 0;
+        $subscriptionId = isset($_REQUEST['subscriptionId']) ? (int) $_REQUEST['subscriptionId'] : 0;
+        $totalAmount    = isset($_REQUEST['totalAmount']) ? (float) $_REQUEST['totalAmount'] : 0;
         $req_status     = $this->get_request_status();
         
         if ('subscriptionPayment' != $dmnType || 0 == $trans_id) {

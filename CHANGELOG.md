@@ -2,6 +2,12 @@
 
 ---
 
+# 1.4
+```
+    * Support OC 4.0.2.1.
+    * Removed the option to change SDK version.
+```
+
 # 1.3
 ```
     * Changed sourceApplication and webMasterId parameters values.

@@ -20,28 +20,33 @@ class Nuvei extends \Opencart\System\Engine\Model
                 ."AND (zone_id = '" . (int)$address['zone_id'] . "' OR zone_id = '0')"
         );
 		
-        if ($this->cart->hasSubscription()) {
-            if (!$this->customer->isLogged()) {
-                $status = false;
-            }
-
+//        if ($this->cart->hasSubscription()) {
+//            if (!$this->customer->isLogged()) {
+//                $status = false;
+//            }
+//
+//            $status = true;
+//		}
+//        elseif (!$this->cart->hasShipping()) {
+//			$status = false;
+//		}
+//        elseif (!$this->config->get(NUVEI_SETTINGS_PREFIX . 'geo_zone_id')) {
+//			$status = true;
+//		}
+//        elseif ($query->num_rows) {
+//			$status = true;
+//		}
+//        else {
+//			$status = false;
+//		}
+        
+        $method_data    = [];
+        $status         = $this->getStatus();
+        
+        if ($query->num_rows) {
             $status = true;
-		}
-        elseif (!$this->cart->hasShipping()) {
-			$status = false;
-		}
-        elseif (!$this->config->get(NUVEI_SETTINGS_PREFIX . 'geo_zone_id')) {
-			$status = true;
-		}
-        elseif ($query->num_rows) {
-			$status = true;
-		}
-        else {
-			$status = false;
-		}
+        }
 		
-		$method_data = array();
-	
 		if ($status) {  
       		$method_data = array( 
         		'code'       => NUVEI_PLUGIN_CODE,
@@ -53,6 +58,57 @@ class Nuvei extends \Opencart\System\Engine\Model
    
     	return $method_data;
   	}
+    
+    /**
+     * Replace above getMethod().
+     * 
+     * @since 4.0.2.1
+     * 
+     * @param array $address
+     * @return array
+     */
+    public function getMethods(array $address = []): array
+    {
+        $this->language->load(NUVEI_CONTROLLER_PATH);
+        
+        $status = $this->getStatus();
+        
+        if (!$this->config->get('config_checkout_payment_address')) {
+			$status = true;
+		}
+        else {
+            $query = $this->db->query(
+                "SELECT * FROM " . DB_PREFIX . "zone_to_geo_zone "
+                ."WHERE geo_zone_id = '". (int)$this->config->get(NUVEI_SETTINGS_PREFIX . 'geo_zone_id') . "' "
+                    ."AND country_id = '" . (int)$address['country_id'] . "' "
+                    ."AND (zone_id = '" . (int)$address['zone_id'] . "' OR zone_id = '0')"
+            );
+
+			if ($query->num_rows) {
+				$status = true;
+			} else {
+				$status = false;
+			}
+		}
+        
+        $method_data = [];
+
+		if ($status) {
+			$option_data['nuvei'] = [
+				'code' => NUVEI_PLUGIN_CODE . '.' . NUVEI_PLUGIN_CODE,
+				'name' => NUVEI_PLUGIN_TITLE
+			];
+
+			$method_data = [
+				'code'       => NUVEI_PLUGIN_CODE,
+				'name'       => NUVEI_PLUGIN_TITLE,
+				'option'     => $option_data,
+				'sort_order' => $this->config->get(NUVEI_SETTINGS_PREFIX . 'sort_order')
+			];
+		}
+
+		return $method_data;
+    }
     
     /**
      * Check if a Subscription plan belongs to Nuvei
@@ -73,7 +129,7 @@ class Nuvei extends \Opencart\System\Engine\Model
         }
         
         if (!empty($query->row['name'])
-            && false !== \Opencart\System\Helper\Utf8\strpos(\Opencart\System\Helper\Utf8\strtolower($query->row['name']), 'nuvei')
+            && false !== strpos(strtolower($query->row['name']), 'nuvei')
         ) {
             return true;
         }
@@ -81,4 +137,30 @@ class Nuvei extends \Opencart\System\Engine\Model
 		return false;
     }
     
+    /**
+     * Just a helper method.
+     * 
+     * @return $status bool
+     */
+    private function getStatus(): bool
+    {
+        if ($this->cart->hasSubscription()) {
+            if (!$this->customer->isLogged()) {
+                $status = false;
+            }
+
+            $status = true;
+		}
+        elseif (!$this->cart->hasShipping()) {
+			$status = false;
+		}
+        elseif (!$this->config->get(NUVEI_SETTINGS_PREFIX . 'geo_zone_id')) {
+			$status = true;
+		}
+        else {
+			$status = false;
+		}
+        
+        return $status;
+    }
 }

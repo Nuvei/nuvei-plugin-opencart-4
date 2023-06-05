@@ -3,6 +3,7 @@
 namespace Opencart\Admin\Controller\Extension\Nuvei\Payment;
 
 require_once DIR_EXTENSION . DIRECTORY_SEPARATOR . 'nuvei' . DIRECTORY_SEPARATOR . 'nuvei_class.php';
+require_once DIR_EXTENSION . DIRECTORY_SEPARATOR . 'nuvei' . DIRECTORY_SEPARATOR . 'nuvei_version_resolver.php';
 
 class Nuvei extends \Opencart\System\Engine\Controller
 {
@@ -188,7 +189,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'code'          => 'nuvei_load_sdk',
             'description'   => 'Load Nuvei Checkout SDK into the catalog.',
             'trigger'       => 'catalog/controller/checkout/checkout/before', 
-            'action'        => 'extension/nuvei/payment/nuvei|event_add_sdk_lib',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_sdk_lib'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
@@ -198,7 +199,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'code'          => 'nuvei_load_orders_js',
             'description'   => 'Load Nuvei additional JS to the Order Info.',
             'trigger'       => 'admin/controller/sale/order|info/before', 
-            'action'        => 'extension/nuvei/payment/nuvei|event_add_order_script',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_order_script'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
@@ -208,7 +209,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'code'          => 'nuvei_load_version_checker',
             'description'   => 'Load Nuvei Plugin version checker JS.',
             'trigger'       => 'admin/controller/common/header/before', 
-            'action'        => 'extension/nuvei/payment/nuvei|event_version_checker',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_version_checker'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
@@ -217,8 +218,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->model_setting_event->addEvent([
             'code'          => 'nuvei_before_add_product',
             'description'   => 'Do not combine a product with a Nuvei Payment Plan with ordinary product.',
-            'trigger'       => 'catalog/controller/checkout/cart|add/before', 
-            'action'        => 'extension/nuvei/payment/nuvei|event_before_add_product',
+            'trigger'       => \Nuvei_Version_Resolver::get_event_action('catalog/controller/checkout/cart|add/before'), 
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_before_add_product'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
@@ -228,7 +229,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'code'          => 'nuvei_product_mod',
             'description'   => 'If there is Nuvei error when try to add a product to the cart - show an error.',
             'trigger'       => 'catalog/controller/common/footer/before', 
-            'action'        => 'extension/nuvei/payment/nuvei|event_add_product_mod',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_product_mod'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
@@ -238,7 +239,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'code'          => 'nuvei_product_subscr_data_mod',
             'description'   => 'On Checkout page into the Product Subscription data add date_next parameter if missing.',
             'trigger'       => 'catalog/model/checkout/order/addOrder/before',
-            'action'        => 'extension/nuvei/payment/nuvei|event_check_subsc_data',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_check_subsc_data'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
@@ -248,10 +249,20 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'code'          => 'nuvei_filter_payment_providers',
             'description'   => 'On Checkout page remove all payment providers if there is a product with Nuvei Payment Plan.',
             'trigger'       => 'catalog/model/checkout/payment_method/getMethods/after',
-            'action'        => 'extension/nuvei/payment/nuvei|event_filter_payment_providers',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_filter_payment_providers'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
+        
+        // event after change the checkout payment method. Added for OC 4.0.2.1
+//        $this->model_setting_event->addEvent([
+//            'code'          => 'nuvei_change_payment_provider',
+//            'description'   => 'On Checkout page when client change the Payment provider.',
+//            'trigger'       => 'catalog/controller/checkout/payment_method.save/after',
+//            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_change_payment_providers'),
+//            'status'        => 1,
+//            'sort_order'    => 1,
+//        ]);
     }
     
     public function uninstall()
@@ -329,8 +340,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $nuveiAllowSettleBtn    = 0;
         $allowCancelSubsBtn     = 0;
         $last_voidalbe_tr_time  = 0;
-        $isNuveiOrder           = NUVEI_PLUGIN_CODE == $this->data['payment_code'] ? 1 : 0;
-        
+        $isNuveiOrder           = (int) \Nuvei_Version_Resolver::check_for_nuvei_order($this->data);
+                
 //        \Nuvei_Class::create_log($this->plugin_settings, $nuvei_remaining_total, 'Admin Order Total');
         
         if(1 == $isNuveiOrder

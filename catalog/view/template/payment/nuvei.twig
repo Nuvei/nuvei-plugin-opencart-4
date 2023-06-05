@@ -1,4 +1,6 @@
 <script type="text/javascript">
+    var nuveiPluginCode = '{{ NUVEI_PLUGIN_CODE }}';
+    
     function showNuveiCheckout() {
         console.log('showNuveiCheckout()');
 
@@ -10,7 +12,23 @@
 
         console.log(nuveiCheckoutSdkParams);
 
-        checkout(nuveiCheckoutSdkParams);
+        // in case the checkout is not loaded, try to load it here since OC 4.0.2.1
+        {#if (typeof checkout != 'function') {
+            console.log('CheckoutSDK was not loaded.');
+            
+            var script      = document.createElement("script");
+            script.type     = "text/javascript";
+            script.src      = '{{ sdkUrl }}';
+            script.onload   = function() {
+                console.log('CheckoutSDK loaded!');
+                checkout(nuveiCheckoutSdkParams);
+            };
+            
+            document.getElementsByTagName("head")[0].appendChild(script);
+        }
+        else {#}
+            checkout(nuveiCheckoutSdkParams);
+{#        }#}
     }
 
     function nuveiPrePayment(paymentDetails) {
@@ -73,15 +91,17 @@
                         $('#nuvei_error').addClass('d-none');
                     },
 
-                    complete: function () {
-
+                    complete: function (json) {
+                        console.log(json)
                     },
 
                     success: function (json) {
+                        console.log(json)
+                        
                         if (json['error']) {
-                            $('#nuvei_blocker').addClass('d-none');
-
-                            scFormFalse(json['error']);
+                            checkout.destroy();
+                            $('#nuvei_blocker').hide();
+                            alert('{{ error_paid_order }}' . resp.transactionId);
                         }
 
                         if (json['redirect']) {
@@ -91,6 +111,10 @@
 
                     error: function (xhr, ajaxOptions, thrownError) {
                         console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                        
+                        checkout.destroy();
+                        $('#nuvei_blocker').hide();
+                        alert(xhr.responseText);
                     }
                 });
 
@@ -116,6 +140,8 @@
     }
 
     function scFormFalse(_errorMsg) {
+        console.log('Nuvei error', _errorMsg);
+        
         $('#nuvei_error').find('div').html(_errorMsg);
         $('#nuvei_error').removeClass('d-none');
 
@@ -135,12 +161,34 @@
         console.log('document loaded');
         
         $('#input-payment-method').on('change', function() {
-            let _self = $(this);
+            console.log($(this).val());
+        }); 
+        
+        {% if ocVersionInt >= 4020 %}
+            // for version 4.0.2.1
+            console.log($('#input-payment-code').val());
+            
+            $('#input-payment-code').on('change', function() {
+              let _self = $(this);
 
-            if (_self.val() != '{{ NUVEI_PLUGIN_CODE }}') {
+              if (_self.val() != '{{ NUVEI_PLUGIN_CODE }}.{{ NUVEI_PLUGIN_CODE }}') {
+                  $('#nuvei_checkout').hide();
+              }
+            });
+            
+            if ($('#input-payment-code').val() != '{{ NUVEI_PLUGIN_CODE }}.{{ NUVEI_PLUGIN_CODE }}') {
                 $('#nuvei_checkout').hide();
             }
-        });
+        {% else %}
+            // for version 4.0.1.1
+            $('#input-payment-method').on('change', function() {
+                let _self = $(this);
+
+                if (_self.val() != '{{ NUVEI_PLUGIN_CODE }}') {
+                    $('#nuvei_checkout').hide();
+                }
+            });
+        {% endif %}
         
         // just load few containers
         if ($('#nuvei_blocker').length == 0) {

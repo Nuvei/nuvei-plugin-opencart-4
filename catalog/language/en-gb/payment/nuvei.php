@@ -15,6 +15,7 @@ $_['error_missing_tr_id']       = 'Error - missing Transaction ID!';
 $_['error_nuvei_subs_prod']     = 'You can not checkout payment plan products together with non-payment plan ones.';
 $_['error_guest_nuvei_subs']    = 'Only Registred users can checkout products with Nuvei Payment Plans.';
 $_['error_product_quantity']    = 'Some of the products in the Cart is no more available.';
+$_['error_paid_order']          = 'The order was paid, but still there is an error. Please, contact the store owner and provide Transaction number: ';
 
 
 $_['Error when try to start a Subscription by the Order.'] = 'Error when try to start a Subscription by the Order.';
