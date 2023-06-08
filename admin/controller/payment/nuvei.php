@@ -198,7 +198,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->model_setting_event->addEvent([
             'code'          => 'nuvei_load_orders_js',
             'description'   => 'Load Nuvei additional JS to the Order Info.',
-            'trigger'       => 'admin/controller/sale/order|info/before', 
+            'trigger'       => \Nuvei_Version_Resolver::get_event_action('admin/controller/sale/order|info/before'), 
             'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_order_script'),
             'status'        => 1,
             'sort_order'    => 1,
@@ -253,16 +253,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'status'        => 1,
             'sort_order'    => 1,
         ]);
-        
-        // event after change the checkout payment method. Added for OC 4.0.2.1
-//        $this->model_setting_event->addEvent([
-//            'code'          => 'nuvei_change_payment_provider',
-//            'description'   => 'On Checkout page when client change the Payment provider.',
-//            'trigger'       => 'catalog/controller/checkout/payment_method.save/after',
-//            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_change_payment_providers'),
-//            'status'        => 1,
-//            'sort_order'    => 1,
-//        ]);
     }
     
     public function uninstall()
