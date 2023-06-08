@@ -83,9 +83,13 @@
 
             scFormFalse("{{ nuvei_order_error }}");
         }
-            
-        // success 
-        if(resp.result == 'APPROVED' && resp.hasOwnProperty('transactionId')) {
+        
+        // success or pending
+        if (resp.hasOwnProperty('transactionId')
+            && '' != resp.transactionId
+            && ( resp.result == 'APPROVED' || resp.result == 'PENDING' )
+                
+        ) {
             $.ajax({
                 url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|confirm&language={{ language }}',
                 data: { nuvei_tr_id: resp.transactionId },
@@ -126,7 +130,7 @@
 
             return;
         }
-
+        
         // declined
         if(resp.result == 'DECLINED') {
             if (resp.hasOwnProperty('errorDescription')

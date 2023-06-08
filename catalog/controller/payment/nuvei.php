@@ -446,39 +446,22 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $this->return_message('DMN report: CARD_TOKENIZATION. The process ends here.');
         }
         
+        $req_status = $this->get_request_status();
+        
+        if('pending' == strtolower($req_status)) {
+            $this->return_message('DMN status is Pending. Wait for another status.');
+		}
+        
         if(!$this->validate_dmn()) {
             $this->return_message('DMN report: You receive DMN from not trusted source. The process ends here.');
         }
         
-        $trans_type = \Nuvei_Class::get_param('transactionType');
-        $trans_id   = (int) \Nuvei_Class::get_param('TransactionID');
-        $req_status = $this->get_request_status();
-//        $relatedTransactionId   = (int) \Nuvei_Class::get_param('relatedTransactionId');
-//        $dmnType                = \Nuvei_Class::get_param('dmnType');
-//        $client_request_id      = \Nuvei_Class::get_param('clientRequestId');
-        
         // check for Subscription State DMN
         $this->process_subs_state();
-        
-//        if(empty($req_status)) {
-//            $this->return_message('DMN report: the Status parameter is empty.');
-//		}
-        
-//        if (empty($trans_id)) {
-//            $this->return_message('DMN error - The TransactionID is empty!');
-//		}
         
         // check for Subscription Payment DMN
         $this->process_subs_payment();
         
-//        if(!$trans_type) {
-//            $this->return_message('DMN report: Transaction Type is empty');
-//		}
-		
-		if('pending' == strtolower($req_status)) {
-            $this->return_message('DMN status is Pending. Wait for another status.');
-		}
-		
         $this->get_order_info_by_dmn();
         
         $order_id = $this->order_info['order_id'];
@@ -492,6 +475,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         $this->new_order_status = $this->order_info['order_status_id'];
+        
+        $trans_type = \Nuvei_Class::get_param('transactionType');
         
         # Sale and Auth
         if(in_array($trans_type, array('Sale', 'Auth'))) {
