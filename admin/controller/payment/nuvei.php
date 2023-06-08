@@ -266,6 +266,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->model_setting_event->deleteEventByCode('nuvei_before_add_product');
         $this->model_setting_event->deleteEventByCode('nuvei_product_mod');
         $this->model_setting_event->deleteEventByCode('nuvei_product_subscr_data_mod');
+        $this->model_setting_event->deleteEventByCode('nuvei_filter_payment_providers');
     }
     
     public function event_add_order_script()
