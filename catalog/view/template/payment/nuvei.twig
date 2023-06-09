@@ -1,5 +1,6 @@
 <script type="text/javascript">
-    var nuveiPluginCode = '{{ NUVEI_PLUGIN_CODE }}';
+    var nuveiPluginCode     = '{{ NUVEI_PLUGIN_CODE }}';
+    var nuveiPluginTitle    = '{{ NUVEI_PLUGIN_TITLE }}';
     
     function showNuveiCheckout() {
         console.log('showNuveiCheckout()');
@@ -12,23 +13,7 @@
 
         console.log(nuveiCheckoutSdkParams);
 
-        // in case the checkout is not loaded, try to load it here since OC 4.0.2.1
-        {#if (typeof checkout != 'function') {
-            console.log('CheckoutSDK was not loaded.');
-            
-            var script      = document.createElement("script");
-            script.type     = "text/javascript";
-            script.src      = '{{ sdkUrl }}';
-            script.onload   = function() {
-                console.log('CheckoutSDK loaded!');
-                checkout(nuveiCheckoutSdkParams);
-            };
-            
-            document.getElementsByTagName("head")[0].appendChild(script);
-        }
-        else {#}
-            checkout(nuveiCheckoutSdkParams);
-{#        }#}
+        checkout(nuveiCheckoutSdkParams);
     }
 
     function nuveiPrePayment(paymentDetails) {
@@ -116,7 +101,7 @@
 
                 success: function (json) {
                     console.log(json);
-                    debugger;
+                    
                     if (json.hasOwnProperty('redirect') && '' != json['redirect']) {
                         window.location = json['redirect'];
                         return;

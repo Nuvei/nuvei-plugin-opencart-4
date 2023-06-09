@@ -394,7 +394,19 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		if (!$json) {
 			$this->load->model('checkout/order');
             
-//            $this->order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+            $this->order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+            
+            // the order is still invisible into the admin
+            if (isset($this->order_info['order_status_id'])
+                && (int) $this->order_info['order_status_id'] == 0
+            ) {
+                $this->model_checkout_order->addHistory(
+                    $this->session->data['order_id'], 
+                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
+                );
+            }
+            
+            // in case the DMN come firts do not override its status
             
 //            if(isset($this->order_info['order_status_id'])
 //                && (int) $this->order_info['order_status_id'] == 0
@@ -407,10 +419,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
 //                );
 //            }
 //            else {
-                $this->model_checkout_order->addHistory(
-                    $this->session->data['order_id'], 
-                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
-                );
+//                $this->model_checkout_order->addHistory(
+//                    $this->session->data['order_id'], 
+//                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
+//                );
 //            }
 
             $this->session->data['nuvei_last_oo_details'] = [];
