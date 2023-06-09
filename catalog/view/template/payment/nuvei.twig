@@ -77,18 +77,27 @@
     function nuveiAfterSdkResponse(resp) {
         console.log('nuveiAfterSdkResponse', resp);
 
-        // on undefined error
-        if(!resp.hasOwnProperty('result')) {
-            console.error('Error with SDK response: ' + resp);
-
+        // when no result parameter
+        if (!resp.hasOwnProperty('result')) {
+            if (resp.hasOwnProperty('reason')) {
+                scFormFalse(resp.reason);
+                return;
+            }
+            
+            if (resp.hasOwnProperty('errorDescription')) {
+                scFormFalse(resp.errorDescription);
+                return;
+            }
+            
             scFormFalse("{{ nuvei_order_error }}");
+            return;
         }
         
         // success or pending
         if (resp.hasOwnProperty('transactionId')
             && '' != resp.transactionId
             && ( resp.result == 'APPROVED' || resp.result == 'PENDING' )
-                
+
         ) {
             $.ajax({
                 url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|confirm&language={{ language }}',
@@ -101,21 +110,24 @@
                     $('#nuvei_error').addClass('d-none');
                 },
 
-                complete: function (json) {
+                {#complete: function (json) {
                     console.log(json);
-                },
+                },#}
 
                 success: function (json) {
                     console.log(json);
-
-                    if (json['error']) {
-                        checkout.destroy();
-                        $('#nuvei_blocker').hide();
-                        alert('{{ error_paid_order }}' . resp.transactionId);
+                    debugger;
+                    if (json.hasOwnProperty('redirect') && '' != json['redirect']) {
+                        window.location = json['redirect'];
+                        return;
                     }
 
-                    if (json['redirect']) {
-                        location = json['redirect'];
+                    if (json.hasOwnProperty('error') && '' != json['error']) {
+                        checkout.destroy();
+                        $('#nuvei_blocker').hide();
+
+                        alert('{{ error_paid_order }}' . resp.transactionId);
+                        return;
                     }
                 },
 
@@ -125,14 +137,13 @@
                     checkout.destroy();
                     $('#nuvei_blocker').hide();
                     alert(xhr.responseText);
+
+                    return;
                 }
             });
-
-            return;
         }
-        
         // declined
-        if(resp.result == 'DECLINED') {
+        else if (resp.result == 'DECLINED') {
             if (resp.hasOwnProperty('errorDescription')
                 && 'insufficient funds' == resp.errorDescription.toLowerCase()
             ) {
@@ -143,16 +154,20 @@
             scFormFalse("{{ nuvei_order_declined }}");
             return;
         }
-        
-        // unknown error
-        console.error('Error with SDK response', resp);
-        
-        if (resp.hasOwnProperty('errorDescription')) {
-            scFormFalse(resp.errorDescription);
-            return;
+        // other error
+        else {
+            if (resp.hasOwnProperty('reason')) {
+                scFormFalse(resp.reason);
+                return;
+            }
+            
+            if (resp.hasOwnProperty('errorDescription')) {
+                scFormFalse(resp.errorDescription);
+                return;
+            }
+
+            scFormFalse("{{ nuvei_order_error }}");
         }
-        
-        scFormFalse("{{ nuvei_order_error }}");
     }
 
     function scFormFalse(_errorMsg) {
