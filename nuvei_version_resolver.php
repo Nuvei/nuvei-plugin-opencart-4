@@ -59,6 +59,24 @@ class Nuvei_Version_Resolver
     }
     
     /**
+     * Get Checkout payment method from the session.
+     * 
+     * @param type $session The session data
+     * @return string
+     */
+    public static function get_checkout_pm($session)
+    {
+        $oc_v = self::get_oc_version_int();
+        
+        // for version 4.0.2.0 and up
+        if ($oc_v >= 4020) {
+            return $session['payment_method']['code']; // expected nuvei.nuvei
+        }
+        
+        return $session['payment_method']; // expected nuvei
+    }
+    
+    /**
      * Returns the int representation of OC version.
      * 
      * @return int

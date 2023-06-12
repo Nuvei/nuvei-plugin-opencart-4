@@ -368,8 +368,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
 			$json['error'] = $this->language->get('error_payment_method');
         }
         
+        $session_payment_method = \Nuvei_Version_Resolver::get_checkout_pm($this->session->data);
+        
         // expected "nuvei" or "nuvei.nuvei"
-		if (false === strpos($this->session->data['payment_method']['code'], NUVEI_PLUGIN_CODE)) {
+		if (false === strpos($session_payment_method, NUVEI_PLUGIN_CODE)) {
             \Nuvei_Class::create_log(
                 $this->plugin_settings,
                 [
