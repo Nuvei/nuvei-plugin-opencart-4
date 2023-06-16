@@ -803,7 +803,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         curl_setopt(
             $ch,
             CURLOPT_URL,
-            'https://raw.githubusercontent.com/SafeChargeInternational/nuvei_checkout_opencart3/main/CHANGELOG.md'
+            'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-opencart-4/main/CHANGELOG.md'
         );
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

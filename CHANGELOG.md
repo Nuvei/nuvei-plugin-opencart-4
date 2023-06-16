@@ -2,6 +2,12 @@
 
 ---
 
+# 1.5
+```
+    * Fixed the URL  to the current plugin repo, when check for new version.
+    * Changed Sandbox REST API URL.
+```
+
 # 1.4
 ```
     * Support OC 4.0.2.1.
