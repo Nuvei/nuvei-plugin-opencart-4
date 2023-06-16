@@ -6,6 +6,7 @@
 ```
     * Fixed the URL  to the current plugin repo, when check for new version.
     * Changed Sandbox REST API URL.
+    * Added option to change SimplyConnect theme.
 ```
 
 # 1.4
