@@ -38,6 +38,10 @@ $_['text_none']             = 'None';
 $_['text_accordion']        = 'Accordion';
 $_['text_tiles']            = 'Tiles';
 $_['text_horizontal']       = 'Horizontal';
+$_['text_new_tab']          = 'New tab';
+$_['text_redirect']         = 'Redirect';
+$_['text_popup']            = 'Popup';
+$_['text_apm_popup_help']   = 'Works only when APM window type is "New tab".';
 
 $_['text_sdk_transl_help']  = 'This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples <a href="https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation" target="_blank">check the Documentation</a>.';
 
@@ -78,6 +82,7 @@ $_['entry_status']            	= 'Status:';
 $_['entry_sort_order']       	= 'Sort Order';
 $_['entry_preselect_nuvei']     = 'Preselect Nuvei on checkout:';
 $_['entry_sdk_theme']           = 'SimplyConnect theme:';
+$_['entry_dcc']                 = 'Use currency conversion:';
 $_['entry_block_cards']         = 'Block Cards:';
 $_['entry_block_pms']           = 'Block Payment methods:';
 $_['entry_upos']                = 'UPOs:';
@@ -90,6 +95,7 @@ $_['entry_dmn_url']             = 'Notification (DMN) URL:';
 $_['entry_change_order_status'] = 'Auto change the Order status:';
 $_['entry_rebilling_plan_id']   = 'Rebilling Plan ID:';
 
+$_['entry_apm_window_type']         = 'APM window type:';
 $_['entry_auto_close_apm_popup']    = 'Auto close APM popup:';
 $_['nuvei_btn_remove_logs']         = 'Remove logs:';
 $_['nuvei_btn_remove_help']         = 'Only the oldest logs will be removed. The logs for last 30 days will be kept.';

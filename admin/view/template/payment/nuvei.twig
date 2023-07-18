@@ -250,7 +250,7 @@
                                 </div>
                             </div>#}
                             
-                            <!-- SDK version -->
+                            <!-- SDK theme -->
                             <div class="row mb-3">
                                 <label class="col-sm-2 col-form-label">{{ entry_sdk_theme }}</label>
                                 <div class="col-sm-10">
@@ -332,6 +332,20 @@
                                 </div>
                             </div>
                             
+                            <!-- APMs window type -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_apm_window_type }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}apm_window_type" class="form-select">
+                                        <option value="" {% if _context[nuvei_settings_prefix ~ 'apm_window_type']  == '' %} selected=""{% endif %}>{{ text_popup }}</option>
+                                        
+                                        <option value="newTab" {% if _context[nuvei_settings_prefix ~ 'apm_window_type']  == 'newTab' %} selected=""{% endif %}>{{ text_new_tab }}</option>
+                                        
+                                        <option value="redirect" {% if _context[nuvei_settings_prefix ~ 'apm_window_type']  == 'redirect' %} selected=""{% endif %}>{{ text_redirect }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                                    
                             <!-- Auto close APMs popup, only for Sandbox mode -->
                             {% if _context[nuvei_settings_prefix ~ 'test_mode']  == 1 %}
                                 <div class="row mb-3">
@@ -341,6 +355,8 @@
                                             <option value="1" {% if _context[nuvei_settings_prefix ~ 'auto_close_apm_popup']  == 1 %} selected=""{% endif %}>{{ text_yes }}</option>
                                             <option value="0" {% if _context[nuvei_settings_prefix ~ 'auto_close_apm_popup']  == 0 %} selected=""{% endif %}>{{ text_no }}</option>
                                         </select>
+                                        
+                                        <span class="form-text">{{ text_apm_popup_help }}</span>
                                     </div>
                                 </div>
                             {% endif %}

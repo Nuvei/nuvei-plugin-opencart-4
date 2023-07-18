@@ -33,7 +33,7 @@ class Nuvei_Version_Resolver
      */
     public static function check_for_nuvei_order($order_info)
     {
-        if (empty($order_info) || !is_array($order_info)) {
+        if (empty($order_info) || !is_array($order_info) || empty($order_info['payment_method'])) {
             return false;
         }
         
@@ -66,6 +66,10 @@ class Nuvei_Version_Resolver
      */
     public static function get_checkout_pm($session)
     {
+        if (empty($session['payment_method'])) {
+            return '';
+        }
+        
         $oc_v = self::get_oc_version_int();
         
         // for version 4.0.2.0 and up
