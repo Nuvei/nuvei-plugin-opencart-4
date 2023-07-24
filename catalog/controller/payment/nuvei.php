@@ -111,7 +111,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'logLevel'                  => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_log_level'],
             'i18n'                      => json_decode($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_transl'], true),
             'theme'                     => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_theme'],
-            'apmWindowType'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'],
+//            'apmWindowType'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'],
 //            'billingAddress'         => $order_data['billingAddress'],
 //            'userData'               => ['billingAddress' => $order_data['billingAddress']],
             
@@ -356,16 +356,14 @@ class Nuvei extends \Opencart\System\Engine\Controller
         \Nuvei_Class::create_log($this->plugin_settings, $this->request->post, 'confirm page');
 
 		$json = [];
-
-        # set errors
-        // missing order id into the session
+                
+        // set errors
 		if (!isset($this->session->data['order_id'])) {
             \Nuvei_Class::create_log($this->plugin_settings, 'Missing session order_id.');
             
 			$json['error'] = $this->language->get('error_order_id');
 		}
         
-        // missing payment method into the session
         if (empty($this->session->data['payment_method'])) {
             \Nuvei_Class::create_log($this->plugin_settings, 'Session Payment method is empty.');
             
@@ -380,7 +378,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
                 $this->plugin_settings,
                 [
                     'NUVEI_PLUGIN_CODE'         => NUVEI_PLUGIN_CODE,
-                    'session payment_method'    => $session_payment_method,
+                    'session payment_method'    => $this->session->data['payment_method'],
                 ],
                 'Payment method is incorrect.'
             );
@@ -388,17 +386,17 @@ class Nuvei extends \Opencart\System\Engine\Controller
 			$json['error'] = $this->language->get('error_payment_method');
 		}
         
-//        if(empty($this->request->post['nuvei_tr_id'])
-//            || !is_numeric($this->request->post['nuvei_tr_id'])
-//		) {
-//            \Nuvei_Class::create_log($this->plugin_settings, 'nuvei_tr_id is empty or missing.');
-//            
-//			$json['error'] = $this->language->get('error_missing_tr_id');
-//		}
-        # /set errors
+        if(empty($this->request->post['nuvei_tr_id'])
+            || !is_numeric($this->request->post['nuvei_tr_id'])
+		) {
+            \Nuvei_Class::create_log($this->plugin_settings, 'nuvei_tr_id is empty or missing.');
+        
+			$json['error'] = $this->language->get('error_missing_tr_id');
+		}
+        // /set errors
         
 		if (!$json) {
-			$this->load->model('checkout/order');
+            $this->load->model('checkout/order');
             
             $this->order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
             
@@ -406,19 +404,19 @@ class Nuvei extends \Opencart\System\Engine\Controller
             if (isset($this->order_info['order_status_id'])
                 && (int) $this->order_info['order_status_id'] == 0
             ) {
-                $this->model_checkout_order->addHistory(
-                    $this->session->data['order_id'], 
-                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
-                );
-            }
-            
+                    $this->model_checkout_order->addHistory(
+                        $this->session->data['order_id'], 
+                        $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
+                    );
+                }
+                
             // in case the DMN come firts do not override its status
-            
+                
 //            if(isset($this->order_info['order_status_id'])
 //                && (int) $this->order_info['order_status_id'] == 0
 //            ) {
 //                $this->model_checkout_order->addHistory(
-//                    $this->session->data['order_id'],
+//                    $this->session->data['order_id'], 
 //                    $this->order_info['order_status_id'], // 0
 //                    $this->language->get('nuvei_payment_complete'),
 //                    true
@@ -439,10 +437,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
                     . '&language=' . $this->config->get('config_language'), 
                 true
             );
-		}
-
-		$this->response->addHeader('Content-Type: application/json');
-		$this->response->setOutput(json_encode($json));
+        }
+        
+            $this->response->addHeader('Content-Type: application/json');
+            $this->response->setOutput(json_encode($json));
     }
     
     /**
@@ -664,38 +662,38 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         // in case when APM popup is changed
-        $lood_apmWindowType = isset($nuvei_last_oo_details['apmWindowType'])
-            ? $nuvei_last_oo_details['apmWindowType'] : '';
+//        $lood_apmWindowType = isset($nuvei_last_oo_details['apmWindowType'])
+//            ? $nuvei_last_oo_details['apmWindowType'] : '';
         
-        $setting_apm_window_type = isset($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type']) 
-            ? $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'] : '';
+//        $setting_apm_window_type = isset($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type']) 
+//            ? $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'] : '';
         
-        if ('redirect' == $lood_apmWindowType) {
-            if ('redirect' != $setting_apm_window_type) {
-                \Nuvei_Class::create_log(
-                    $this->plugin_settings,
-                    [
-                        '$lood_apmWindowType'       => $lood_apmWindowType,
-                        '$setting_apm_window_type'  => $setting_apm_window_type,
-                    ],
-                    'New Open order desision - new apmWindowType was set'
-                );
-
-                $try_update_order = false;
-            }
-        }
-        elseif ('redirect' == $setting_apm_window_type) {
-            \Nuvei_Class::create_log(
-                $this->plugin_settings,
-                [
-                    '$lood_apmWindowType'       => $lood_apmWindowType,
-                    '$setting_apm_window_type'  => $setting_apm_window_type,
-                ],
-                'New Open order desision - new apmWindowType was set'
-            );
-
-            $try_update_order = false;
-        }
+//        if ('redirect' == $lood_apmWindowType) {
+//            if ('redirect' != $setting_apm_window_type) {
+//                \Nuvei_Class::create_log(
+//                    $this->plugin_settings,
+//                    [
+//                        '$lood_apmWindowType'       => $lood_apmWindowType,
+//                        '$setting_apm_window_type'  => $setting_apm_window_type,
+//                    ],
+//                    'New Open order desision - new apmWindowType was set'
+//                );
+//
+//                $try_update_order = false;
+//            }
+//        }
+//        elseif ('redirect' == $setting_apm_window_type) {
+//            \Nuvei_Class::create_log(
+//                $this->plugin_settings,
+//                [
+//                    '$lood_apmWindowType'       => $lood_apmWindowType,
+//                    '$setting_apm_window_type'  => $setting_apm_window_type,
+//                ],
+//                'New Open order desision - new apmWindowType was set'
+//            );
+//
+//            $try_update_order = false;
+//        }
         
         if ($try_update_order) {
             $resp = $this->update_order();
@@ -711,13 +709,15 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         # /try to update Order
         
-        $success_url = $this->url->link(NUVEI_CONTROLLER_PATH . '%7Cconfirm&language=' 
-            . $this->config->get('config_language') . '&order_id=' . $this->session->data['order_id']);
+//        $success_url = $this->url->link(
+//            NUVEI_CONTROLLER_PATH . '%7Cconfirm',
+//            [
+//                'language' => $this->config->get('config_language'),
+//                'order_id' => $this->session->data['order_id'],
+//            ],
+//            true // stop convert & into &amp;
+//        );
                 
-                
-//                $this->url->link(NUVEI_CONTROLLER_PATH . '/success') 
-//            . '' . $this->session->data['order_id'];
-		
 //        $error_url = $this->url->link(NUVEI_CONTROLLER_PATH . '/fail') 
 //            . '&order_id=' . $this->session->data['order_id'];
         
@@ -737,12 +737,13 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		);
         
         // change urlDetails
-        if ('redirect' == @$this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type']) {
-            $oo_params['urlDetails']['successUrl']  = $success_url;
-            $oo_params['urlDetails']['pendingUrl']  = $success_url;
-            $oo_params['urlDetails']['failureUrl']  = $oo_params['urlDetails']['backUrl'];
-        }
-        elseif (1 == @$this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_close_apm_popup']) {
+//        if ('redirect' == @$this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type']) {
+//            $oo_params['urlDetails']['successUrl']  = $success_url;
+//            $oo_params['urlDetails']['pendingUrl']  = $success_url;
+//            $oo_params['urlDetails']['failureUrl']  = $oo_params['urlDetails']['backUrl'];
+//        }
+//        else
+        if (1 == @$this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_close_apm_popup']) {
             $oo_params['urlDetails']['successUrl']  = $oo_params['urlDetails']['failureUrl']
                                                     = $oo_params['urlDetails']['pendingUrl']
                                                     = NUVEI_SDK_AUTOCLOSE_URL;
@@ -784,7 +785,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->session->data['nuvei_last_oo_details']['sessionToken']       = $resp['sessionToken'];
         $this->session->data['nuvei_last_oo_details']['clientRequestId']    = $resp['clientRequestId'];
         $this->session->data['nuvei_last_oo_details']['orderId']            = $resp['orderId'];
-        $this->session->data['nuvei_last_oo_details']['apmWindowType']      = $setting_apm_window_type;
+//        $this->session->data['nuvei_last_oo_details']['apmWindowType']      = $setting_apm_window_type;
         $this->session->data['nuvei_last_oo_details']['billingAddress']['country']
             = $oo_params['billingAddress']['country'];
         

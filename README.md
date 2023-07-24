@@ -1,6 +1,11 @@
 # Nuvei Plugin for OpenCart 4 with Simply Connect
-How to install the plugin manually
 
+## Requirements
+OpenCart 4.0.0.0 and up.  
+Enabled DMN notifications into the merchant account.  
+Public access to the plugin notification URL. It can be find in plugin settings Help Tools.
+
+## Manual installation
 1. Download the plugin and extract the content of the zip file.
 2. Open the result folder, mark all files and folders and add them to zip.
 3. Set or change the name of the zip to nuvei.ocmod.zip.

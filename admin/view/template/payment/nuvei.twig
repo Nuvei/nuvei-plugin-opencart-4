@@ -259,8 +259,6 @@
                                         <option value="tiles" {% if _context[nuvei_settings_prefix ~ 'sdk_theme']  == 'tiles' %} selected=""{% endif %}>{{ text_tiles }}</option>
                                         <option value="horizontal" {% if _context[nuvei_settings_prefix ~ 'sdk_theme']  == 'horizontal' %} selected=""{% endif %}>{{ text_horizontal }}</option>
                                     </select>
-                                    
-                                    <span class="form-text">{{ entry_sdk_version_help }}</span>
                                 </div>
                             </div>
                                 
@@ -333,7 +331,7 @@
                             </div>
                             
                             <!-- APMs window type -->
-                            <div class="row mb-3">
+                            <!--<div class="row mb-3">
                                 <label class="col-sm-2 col-form-label">{{ entry_apm_window_type }}</label>
                                 <div class="col-sm-10">
                                     <select name="{{ nuvei_settings_prefix }}apm_window_type" class="form-select">
@@ -344,7 +342,7 @@
                                         <option value="redirect" {% if _context[nuvei_settings_prefix ~ 'apm_window_type']  == 'redirect' %} selected=""{% endif %}>{{ text_redirect }}</option>
                                     </select>
                                 </div>
-                            </div>
+                            </div>-->
                                     
                             <!-- Auto close APMs popup, only for Sandbox mode -->
                             {% if _context[nuvei_settings_prefix ~ 'test_mode']  == 1 %}
