@@ -86,7 +86,7 @@
         ) {
             $.ajax({
                 url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|confirm&language={{ language }}',
-                //data: { nuvei_tr_id: resp.transactionId },
+                data: { nuvei_tr_id: resp.transactionId },
                 type: 'post',
                 dataType: 'json',
 
