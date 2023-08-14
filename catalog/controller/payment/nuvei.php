@@ -730,6 +730,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'userDetails'       => $this->order_addresses['billingAddress'],
 			'billingAddress'	=> $this->order_addresses['billingAddress'],
             'shippingAddress'   => $this->order_addresses['shippingAddress'],
+            'userTokenId'       => $this->order_addresses['billingAddress']['email'],
 			'urlDetails'        => array(
 				'backUrl'			=> $this->url->link('checkout/checkout', '', true),
 				'notificationUrl'   => $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback'),
@@ -751,15 +752,15 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         # use or not UPOs
         // in case there is a Product with a Payment Plan
-        if (!empty($rebilling_params['merchantDetails']['customField3'])) {
-            $oo_params['userTokenId'] = $oo_params['billingAddress']['email'];
-        }
-        if(isset($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_upos'])
-            && 1 == $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_upos'] 
-            && 1 == $this->is_user_logged
-        ) {
-            $oo_params['userTokenId'] = $oo_params['billingAddress']['email'];
-        }
+//        if (!empty($rebilling_params['merchantDetails']['customField3'])) {
+//            $oo_params['userTokenId'] = $oo_params['billingAddress']['email'];
+//        }
+//        if(isset($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_upos'])
+//            && 1 == $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_upos'] 
+//            && 1 == $this->is_user_logged
+//        ) {
+//            $oo_params['userTokenId'] = $oo_params['billingAddress']['email'];
+//        }
         # /use or not UPOs
         
         $oo_params = array_merge_recursive($oo_params, $rebilling_params);
@@ -789,9 +790,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->session->data['nuvei_last_oo_details']['billingAddress']['country']
             = $oo_params['billingAddress']['country'];
         
-        if (!empty($oo_params['userTokenId'])) {
+//        if (!empty($oo_params['userTokenId'])) {
             $this->session->data['nuvei_last_oo_details']['userTokenId'] = $oo_params['userTokenId'];
-        }
+//        }
         
         $oo_params['sessionToken'] = $resp['sessionToken'];
 		
@@ -1342,16 +1343,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
     
     private function get_order_info_by_dmn()
     {
-//        $order_id               = (int) \Nuvei_Class::get_param('order_id');
         $relatedTransactionId   = (int) \Nuvei_Class::get_param('relatedTransactionId');
         $merchant_unique_id     = \Nuvei_Class::get_param('merchant_unique_id');
         $client_request_id      = \Nuvei_Class::get_param('clientRequestId');
         $cri_parts              = explode('_', $client_request_id);
         
-//        if (is_numeric($order_id) && 0 < $order_id) {
-//            $this->order_info = $this->model_checkout_order->getOrder($order_id);
-//        }
-//        else
         if (!empty($merchant_unique_id) && false === strpos($merchant_unique_id, 'gwp_')) {
             if(is_numeric($merchant_unique_id)) {
                 $order_id = (int) $merchant_unique_id;
@@ -1380,6 +1376,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->order_info = $this->model_checkout_order->getOrder($order_id);
         
         if (!is_array($this->order_info) || empty($this->order_info)) {
+            http_response_code(400);
             $this->return_message('DMN error - There is no order info, invalid Order ID.');
         }
         

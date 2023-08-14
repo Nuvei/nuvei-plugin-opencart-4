@@ -7,6 +7,8 @@
     * Fixed the URL to the current plugin repo, when check for new version.
     * Changed Sandbox REST API URL.
     * Added option to change SimplyConnect theme.
+    * Allways pass userTokenId in OpenOrder rquest.
+    * Return code 400 to the Cashier, when the plugin did not find an OC Order nby the DMN data.
 ```
 
 # 1.4
