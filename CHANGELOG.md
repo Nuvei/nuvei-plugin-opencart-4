@@ -9,6 +9,7 @@
     * Added option to change SimplyConnect theme.
     * Allways pass userTokenId in OpenOrder rquest.
     * Return code 400 to the Cashier, when the plugin did not find an OC Order nby the DMN data.
+    * Trim merchant credentials after get them.
 ```
 
 # 1.4
