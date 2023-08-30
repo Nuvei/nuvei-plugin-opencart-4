@@ -545,8 +545,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		$time = date('YmdHis');
 		
         $ref_parameters = array(
-			'clientUniqueId'        => $order_id . '_' . $time . '_' . uniqid(),
-            'clientRequestId'       => $time . '_' . uniqid(),
+//			'clientUniqueId'        => $order_id . '_' . $time . '_' . uniqid(),
+			'clientUniqueId'        => $order_id . '_' . uniqid(),
+//            'clientRequestId'       => $time . '_' . uniqid(),
 			'amount'                => $this->request->post['amount'],
 			'currency'              => $this->data['currency_code'],
 			'relatedTransactionId'  => $last_sale_tr['transactionId'],
@@ -662,7 +663,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         # normal Void or Settle
         $params = array(
             'clientRequestId'       => $time . '_' . uniqid(),
-            'clientUniqueId'        => $order_id . '_' . $time . '_' . uniqid(),
+//            'clientUniqueId'        => $order_id . '_' . $time . '_' . uniqid(),
+            'clientUniqueId'        => $order_id . '_' . uniqid(),
             'amount'                => $amount,
             'currency'              => $this->data['currency_code'],
             'relatedTransactionId'  => $last_allowed_trans['transactionId'],
@@ -876,8 +878,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $resp = \Nuvei_Class::call_rest_api(
             'getSessionToken', 
             $this->plugin_settings, 
-            ['merchantId', 'merchantSiteId', 'clientRequestId', 'timeStamp'],
-            ['clientRequestId' => date('YmdHis', time()) . '_' . uniqid()]
+            ['merchantId', 'merchantSiteId', 'clientRequestId', 'timeStamp']//,
+            //['clientRequestId' => date('YmdHis', time()) . '_' . uniqid()]
         );
         
         // on missing session token
@@ -902,7 +904,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		$apms_params = array(
 			'sessionToken'      => $resp['sessionToken'],
 			'languageCode'      => $this->language->get('code'),
-            'clientRequestId'   => date('YmdHis', time()) . '_' . uniqid(),
+//            'clientRequestId'   => date('YmdHis', time()) . '_' . uniqid(),
 		);
         
 		$res = \Nuvei_Class::call_rest_api(

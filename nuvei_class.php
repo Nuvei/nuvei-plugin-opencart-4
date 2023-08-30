@@ -187,22 +187,24 @@ class Nuvei_Class
         $time = date('YmdHis', time());
        
         // set here some of the mandatory parameters
-        $params = array_merge_recursive(
+//        $params = array_merge_recursive(
+        $params = array_merge(
             array(
+                'clientRequestId'   => $time . '_' . uniqid(),
                 'merchantId'        => trim($settings[NUVEI_SETTINGS_PREFIX . 'merchantId']),
                 'merchantSiteId'    => trim($settings[NUVEI_SETTINGS_PREFIX . 'merchantSiteId']),
                 'timeStamp'         => $time,
                 'webMasterId'       => 'OpenCart ' . VERSION . '; Plugin v' . self::get_plugin_version(),
                 'sourceApplication' => NUVEI_SOURCE_APP,
-                
-                'merchantDetails'	=> array(
-					'customField2' => $time, // time when we create request
-				),
-                
+//                'merchantDetails'	=> array(
+//					'customField2' => time(), // time when we create request
+//				),
                 'deviceDetails'     => self::get_device_details($settings),
             ),
             $params
         );
+        
+        $params['merchantDetails']['customField2'] = time();
         
         // calculate the checksum
         $concat = '';

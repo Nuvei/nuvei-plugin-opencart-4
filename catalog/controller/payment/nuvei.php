@@ -454,9 +454,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         \Nuvei_Class::create_log($this->plugin_settings, $_REQUEST, 'DMN request');
         
         ### Manual stop DMN is possible only in test mode
-//      \Nuvei_Class::create_log($this->plugin_settings, http_build_query($_REQUEST), 'DMN request query');
+//      \Nuvei_Class::create_log('manually stoped');
 //      die('manually stoped');
-        ### Manual stop DMN END
         
         if (\Nuvei_Class::get_param('type') == 'CARD_TOKENIZATION') {
             $this->return_message('DMN report: CARD_TOKENIZATION. The process ends here.');
@@ -499,8 +498,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
             \Nuvei_Class::create_log(
                 $this->plugin_settings,
                 array(
-                    'order_status_id' => $this->order_info['order_status_id'],
-                    'default complete status' => $this->config->get(NUVEI_SETTINGS_PREFIX . 'order_status_id'),
+                    'order_status_id'           => $this->order_info['order_status_id'],
+                    'default complete status'   => $this->config->get(NUVEI_SETTINGS_PREFIX . 'order_status_id'),
                 ),
                 'DMN Sale/Auth compare order status and default complete status:'
             );
@@ -723,7 +722,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
 		$oo_params = array(
 			'clientUniqueId'	=> $this->session->data['order_id'] . '_' . uniqid(),
-            'clientRequestId'   => date('YmdHis', time()) . '_' . uniqid(),
+//            'clientRequestId'   => date('YmdHis', time()) . '_' . uniqid(),
 			'amount'            => $amount,
             'transactionType'	=> (float) $amount == 0 ? 'Auth' : $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'payment_action'],
 			'currency'          => $this->order_info['currency_code'],
@@ -1330,27 +1329,21 @@ class Nuvei extends \Opencart\System\Engine\Controller
     
     private function get_order_info_by_dmn()
     {
+        $order_id               = 0;
+        $dmn_type               = \Nuvei_Class::get_param('dmnType');
+        $trans_type             = \Nuvei_Class::get_param('transactionType');
         $relatedTransactionId   = (int) \Nuvei_Class::get_param('relatedTransactionId');
         $merchant_unique_id     = \Nuvei_Class::get_param('merchant_unique_id');
-        $client_request_id      = \Nuvei_Class::get_param('clientRequestId');
-        $cri_parts              = explode('_', $client_request_id);
+        $merchant_uid_arr       = explode('_', $merchant_unique_id);
         
-        if (!empty($merchant_unique_id) && false === strpos($merchant_unique_id, 'gwp_')) {
-            if(is_numeric($merchant_unique_id)) {
-                $order_id = (int) $merchant_unique_id;
-            }
-            // beacause of the modified merchant_unique_id - PayPal problem
-            elseif(strpos($merchant_unique_id, '_') !== false) {
-                $order_id_arr = explode('_', $merchant_unique_id);
-                
-                if(is_numeric($order_id_arr[0])) {
-                    $order_id = (int) $order_id_arr[0];
-                }
-            }
+        // default case
+        if (is_array($merchant_uid_arr)
+            && count($merchant_uid_arr) > 1
+            && is_numeric($merchant_uid_arr[0])
+        ) {
+            $order_id = $merchant_uid_arr[0];
         }
-        elseif (!empty($cri_parts) && !empty($cri_parts[0]) && is_numeric($cri_parts[0])) {
-            $order_id = $cri_parts[0];
-        }
+        // CPanel made action
         elseif (!empty($relatedTransactionId)) {
             $query = $this->db->query(
                 'SELECT order_id FROM ' . DB_PREFIX . 'order '
@@ -1359,12 +1352,41 @@ class Nuvei extends \Opencart\System\Engine\Controller
             
             $order_id = (int) @$query->row['order_id'];
         }
+        // Subscription case
+        elseif (in_array($dmn_type, ['subscription', 'subscriptionPayment'])) {
+            $client_req_id_arr = explode('_', \Nuvei_Class::get_param('clientRequestId'));
+            
+            if (is_array($client_req_id_arr)
+                && count($client_req_id_arr) > 0
+                && is_numeric($client_req_id_arr[0])
+            ) {
+                $order_id = $client_req_id_arr[0];
+            }
+        }
         
         $this->order_info = $this->model_checkout_order->getOrder($order_id);
         
         if (!is_array($this->order_info) || empty($this->order_info)) {
-            http_response_code(400);
-            $this->return_message('DMN error - There is no order info, invalid Order ID.');
+            // create Auto-Void
+            $curr_time          = time();
+            $order_request_time	= \Nuvei_Class::get_param('customField2'); // time of create/update order
+            
+            if (!is_numeric($order_request_time)) {
+                $order_request_time = strtotime($order_request_time);
+            }
+            
+            if ($curr_time - $order_request_time > 1800) {
+                $this->create_auto_void();
+            }
+            // /create Auto-Void
+            
+            if (in_array($trans_type, ['Auth', 'Sale'])) {
+                http_response_code(400);
+                $this->return_message('There is no order info, Let\'s wait one more DMN try.');
+            }
+            
+            http_response_code(200);
+            $this->return_message('There is no order info.');
         }
         
         $isNuveiOrder = \Nuvei_Version_Resolver::check_for_nuvei_order($this->order_info);
@@ -1375,10 +1397,51 @@ class Nuvei extends \Opencart\System\Engine\Controller
                 $this->order_info,
             );
             
-            $this->return_message('DMN error - the Order does not belongs to the Nuvei.');
+            $this->return_message('The Order does not belongs to the Nuvei.');
         }
         
         // success
+        return;
+    }
+    
+    private function create_auto_void()
+    {
+        \Nuvei_Class::create_log($this->plugin_settings, 'Try Auto Void.');
+        
+        // not allowed Auto-Void
+        if (!in_array(\Nuvei_Class::get_param('transactionType'), array('Auth', 'Sale'), true)) {
+            \Nuvei_Class::create_log($this->plugin_settings, 'The transacion is not in allowed range.');
+            return;
+        }
+        
+        $notify_url     = $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback');
+        $void_params    = [
+            'clientUniqueId'        => date('YmdHis') . '-' . uniqid(),
+            'amount'                => (float) \Nuvei_Class::get_param('totalAmount'),
+            'currency'              => \Nuvei_Class::get_param('currency'),
+            'relatedTransactionId'  => \Nuvei_Class::get_param('TransactionID', FILTER_SANITIZE_NUMBER_INT),
+            'url'                   => $notify_url,
+            'urlDetails'            => ['notificationUrl' => $notify_url],
+            'customData'            => 'This is Auto-Void transaction',
+        ];
+
+        $resp = \Nuvei_Class::call_rest_api(
+            'voidTransaction',
+            $this->plugin_settings,
+            ['merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp'],
+            $void_params
+        );
+        
+        
+        // Void Success
+        if (!empty($resp['transactionStatus'])
+            && 'APPROVED' == $resp['transactionStatus']
+            && !empty($resp['transactionId'])
+        ) {
+            http_response_code(200);
+            $this->return_message('The searched Order does not exists, a Void request was made for this Transacrion.');
+        }
+        
         return;
     }
     
@@ -1718,19 +1781,18 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'process_subs_state order_info');
         
-        $dmnType = $_REQUEST['dmnType'] ?? '';
+        $dmnType            = \Nuvei_Class::get_param('dmnType');
+        $subscriptionState  = \Nuvei_Class::get_param('subscriptionState');
+        $subscriptionId     = \Nuvei_Class::get_param('subscriptionId', FILTER_SANITIZE_NUMBER_INT);
         
         if ('subscription' != $dmnType) {
             return;
         }
-            
-        $subscriptionState = $_REQUEST['subscriptionState'] ?? '';
 
         if (empty($subscriptionState)) {
             $this->return_message('Subscription DMN missing subscriptionState. Stop the process.');
         }
 
-        $subscriptionId = (int) ($_REQUEST['subscriptionId'] ?? 0);
         $this->get_order_info_by_dmn();
         
         if(!$this->order_info || empty($this->order_info)) {
@@ -1832,11 +1894,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'process_subs_payment()');
         
-        $dmnType        =  isset($_REQUEST['dmnType']) ? $_REQUEST['dmnType'] : '';
-        $trans_id       = isset($_REQUEST['TransactionID']) ? (int) $_REQUEST['TransactionID'] : 0;
-        $planId         = isset($_REQUEST['planId']) ? (int) $_REQUEST['planId'] : 0;
-        $subscriptionId = isset($_REQUEST['subscriptionId']) ? (int) $_REQUEST['subscriptionId'] : 0;
-        $totalAmount    = isset($_REQUEST['totalAmount']) ? (float) $_REQUEST['totalAmount'] : 0;
+        $dmnType        = \Nuvei_Class::get_param('dmnType');
+        $trans_id       = (int) \Nuvei_Class::get_param('TransactionID');
+        $planId         = (int) \Nuvei_Class::get_param('planId');
+        $subscriptionId = (int) \Nuvei_Class::get_param('subscriptionId');
+        $totalAmount    = (float) \Nuvei_Class::get_param('totalAmount');
         $req_status     = $this->get_request_status();
         
         if ('subscriptionPayment' != $dmnType || 0 == $trans_id) {
