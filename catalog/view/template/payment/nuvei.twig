@@ -21,7 +21,8 @@
 
         return new Promise((resolve, reject) => {
             $.ajax({
-                url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|open_order',
+{#                url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|open_order',#}
+                url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|checkout_pre_payment',
                 type: 'post',
                 dataType: 'json'
             })
@@ -30,7 +31,18 @@
                 reject();
             })
             .done(function(resp) {
-                if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
+                console.log(resp);
+        
+                if (!resp.hasOwnProperty('success') || 0 == resp.success) {
+                    reject();
+                    window.location.reload();
+                    return;
+                }
+                
+                resolve();
+                return;
+                
+                {#if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
                     if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
                         resolve();
                         return;
@@ -53,7 +65,7 @@
                 }
 
                 scFormFalse("{{ nuvei_order_error }}");
-                reject();
+                reject();#}
             });
 
         });
@@ -61,6 +73,12 @@
 
     function nuveiAfterSdkResponse(resp) {
         console.log('nuveiAfterSdkResponse', resp);
+
+        // expired session
+        if (resp.hasOwnProperty('session_expired') && resp.session_expired) {
+            window.location.reload();
+            return;
+        }
 
         // when no result parameter
         if (!resp.hasOwnProperty('result')) {

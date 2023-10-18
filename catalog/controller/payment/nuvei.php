@@ -28,11 +28,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         $this->order_addresses  = $this->get_order_addresses();
         $this->is_user_logged   = !empty($this->session->data['customer_id']) ? 1 : 0;
+        $products               = $this->cart->getProducts();
 
         // Rebilling products checks
         if ($subscriptions > 0) {
             // before call Open Order check for not allowed combination of prdocusts
-            if (count($this->cart->getProducts()) > 1) {
+            if (count($products) > 1) {
                 $data['nuvei_error'] = $this->language->get('error_nuvei_products');
                 
                 \Nuvei_Class::create_log($this->plugin_settings, $data['nuvei_error']);
@@ -51,7 +52,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
                 
         // Open Order
-        $order_data = $this->open_order();
+        $order_data = $this->open_order($products);
 		
 		if(empty($order_data) || empty($order_data['sessionToken'])) {
 			\Nuvei_Class::create_log(
@@ -548,31 +549,81 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->return_message('DMN was not recognized!');
 	}
     
-    public function open_order(): array
+    public function checkout_pre_payment(): void
+    {
+        // load needed models
+        $this->load->model('account/address');
+        $this->load->model('checkout/cart');
+        $this->load->model('checkout/order');
+        $this->load_settings();
+        
+        $this->response->addHeader('Content-Type: application/json');
+
+        if (!isset($this->session->data['order_id'])) {
+            \Nuvei_Class::create_log(
+                $this->plugin_settings,
+                $this->session->data,
+                'Missing Order ID into the session.',
+                'WARN'
+            );
+            
+            $this->response->setOutput(json_encode(['success' => 0]));
+        }
+
+        $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+        $this->order_addresses  = $this->get_order_addresses();
+        $products               = $this->get_products_main_data($this->model_checkout_cart->getProducts());
+        $nuvei_last_oo_details  = [];
+        
+        if (isset($this->session->data['nuvei_last_oo_details'])) {
+            $nuvei_last_oo_details = $this->session->data['nuvei_last_oo_details'];
+        }
+        
+        \Nuvei_Class::create_log(
+            $this->plugin_settings,
+            [
+                $nuvei_last_oo_details,
+                $products,
+                md5(serialize($products))
+            ]
+        );
+        
+        // success
+        if (!empty($nuvei_last_oo_details['productsHash'])
+            && $nuvei_last_oo_details['productsHash'] == md5(serialize($products))
+        ) {
+            $this->response->setOutput(json_encode(['success' => 1]));
+            return;
+        }
+        
+        // on error
+        $this->response->setOutput(json_encode(['success' => 0]));
+        return;
+    }
+    
+    private function get_products_main_data($products): array
+    {
+        $products_main_data = [];
+        
+        foreach ($products as $product) {
+            $products_main_data[] = [
+                'cart_id'       => @$product['cart_id'],
+                'product_id'    => @$product['product_id'],
+                'name'          => @$product['name'],
+                'model'         => @$product['model'],
+                'option'        => @$product['option'],
+                'quantity'      => @$product['quantity'],
+                'price'         => @$product['price'],
+                'total'         => @$product['total'],
+            ];
+        }
+        
+        return $products_main_data;
+    }
+    
+    private function open_order($products): array
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'open_order()');
-        
-        $is_ajax = false;
-        
-        if(null === $this->order_info) {
-            $this->load->model('checkout/order');
-            $this->load->model('account/address');
-            $this->load_settings();
-            
-            if (!isset($this->session->data['order_id'])) {
-                $this->response->addHeader('Content-Type: application/json');
-                $this->response->setOutput(json_encode([
-                    'status'    => 'ERROR',
-                    'msg'       => 'Missing Order ID into the session.',
-                ]));
-                
-               return [];
-            }
-            
-            $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);
-            $this->order_addresses  = $this->get_order_addresses();
-            $is_ajax                = true;
-        }
         
         // chech for product quantity just before pay
 //        $this->load->model('checkout/cart');
@@ -605,6 +656,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $rebilling_params       = $this->preprare_rebilling_params();
         $try_update_order       = false;
         $nuvei_last_oo_details  = [];
+        $products_main_data     = $this->get_products_main_data($products);
         
         if (isset($this->session->data['nuvei_last_oo_details'])) {
             $nuvei_last_oo_details = $this->session->data['nuvei_last_oo_details'];
@@ -660,69 +712,17 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $try_update_order = false;
         }
         
-        // in case when APM popup is changed
-//        $lood_apmWindowType = isset($nuvei_last_oo_details['apmWindowType'])
-//            ? $nuvei_last_oo_details['apmWindowType'] : '';
-        
-//        $setting_apm_window_type = isset($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type']) 
-//            ? $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'] : '';
-        
-//        if ('redirect' == $lood_apmWindowType) {
-//            if ('redirect' != $setting_apm_window_type) {
-//                \Nuvei_Class::create_log(
-//                    $this->plugin_settings,
-//                    [
-//                        '$lood_apmWindowType'       => $lood_apmWindowType,
-//                        '$setting_apm_window_type'  => $setting_apm_window_type,
-//                    ],
-//                    'New Open order desision - new apmWindowType was set'
-//                );
-//
-//                $try_update_order = false;
-//            }
-//        }
-//        elseif ('redirect' == $setting_apm_window_type) {
-//            \Nuvei_Class::create_log(
-//                $this->plugin_settings,
-//                [
-//                    '$lood_apmWindowType'       => $lood_apmWindowType,
-//                    '$setting_apm_window_type'  => $setting_apm_window_type,
-//                ],
-//                'New Open order desision - new apmWindowType was set'
-//            );
-//
-//            $try_update_order = false;
-//        }
-        
         if ($try_update_order) {
-            $resp = $this->update_order();
+            $resp = $this->update_order($products_main_data);
             
             if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-                if($is_ajax) {
-                    $this->response->addHeader('Content-Type: application/json');
-                    $this->response->setOutput(json_encode($resp));
-                }
-
                 return $resp;
             }
         }
         # /try to update Order
         
-//        $success_url = $this->url->link(
-//            NUVEI_CONTROLLER_PATH . '%7Cconfirm',
-//            [
-//                'language' => $this->config->get('config_language'),
-//                'order_id' => $this->session->data['order_id'],
-//            ],
-//            true // stop convert & into &amp;
-//        );
-                
-//        $error_url = $this->url->link(NUVEI_CONTROLLER_PATH . '/fail') 
-//            . '&order_id=' . $this->session->data['order_id'];
-        
 		$oo_params = array(
 			'clientUniqueId'	=> $this->session->data['order_id'] . '_' . uniqid(),
-//            'clientRequestId'   => date('YmdHis', time()) . '_' . uniqid(),
 			'amount'            => $amount,
             'transactionType'	=> (float) $amount == 0 ? 'Auth' : $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'payment_action'],
 			'currency'          => $this->order_info['currency_code'],
@@ -737,12 +737,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		);
         
         // change urlDetails
-//        if ('redirect' == @$this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type']) {
-//            $oo_params['urlDetails']['successUrl']  = $success_url;
-//            $oo_params['urlDetails']['pendingUrl']  = $success_url;
-//            $oo_params['urlDetails']['failureUrl']  = $oo_params['urlDetails']['backUrl'];
-//        }
-//        else
         if (1 == @$this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_close_apm_popup']) {
             $oo_params['urlDetails']['successUrl']  = $oo_params['urlDetails']['failureUrl']
                                                     = $oo_params['urlDetails']['pendingUrl']
@@ -767,29 +761,21 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		}
         
         // set them to session for the check before submit the data to the webSDK
+        $this->session->data['nuvei_last_oo_details']['productsHash']       = md5(serialize($products_main_data));
         $this->session->data['nuvei_last_oo_details']['amount']             = $oo_params['amount'];
         $this->session->data['nuvei_last_oo_details']['transactionType']    = $oo_params['transactionType'];
         $this->session->data['nuvei_last_oo_details']['sessionToken']       = $resp['sessionToken'];
         $this->session->data['nuvei_last_oo_details']['clientRequestId']    = $resp['clientRequestId'];
         $this->session->data['nuvei_last_oo_details']['orderId']            = $resp['orderId'];
-//        $this->session->data['nuvei_last_oo_details']['apmWindowType']      = $setting_apm_window_type;
+        $this->session->data['nuvei_last_oo_details']['userTokenId']        = $oo_params['userTokenId'];
         $this->session->data['nuvei_last_oo_details']['billingAddress']['country']
             = $oo_params['billingAddress']['country'];
         
-//        if (!empty($oo_params['userTokenId'])) {
-            $this->session->data['nuvei_last_oo_details']['userTokenId'] = $oo_params['userTokenId'];
-//        }
-        
         $oo_params['sessionToken'] = $resp['sessionToken'];
 		
-        if($is_ajax) {
-            $this->response->addHeader('Content-Type: application/json');
-            $this->response->setOutput(json_encode($oo_params));
-        }
-        
 		return $oo_params;
 	}
-	
+
     /**
      * Function validate_dmn
      * Check if the DMN is not fake.
@@ -1098,7 +1084,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->new_order_status = $status_id;
     }
     
-    private function update_order()
+    private function update_order($products)
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'update_order()');
         
@@ -1152,7 +1138,16 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         # Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-            $this->session->data['nuvei_last_oo_details']['amount'] = $params['amount'];
+            \Nuvei_Class::create_log(
+                $this->plugin_settings,
+                [
+                    $products,
+                    md5(serialize($products))
+                ]
+            );
+            
+            $this->session->data['nuvei_last_oo_details']['productsHash']   = md5(serialize($products));
+            $this->session->data['nuvei_last_oo_details']['amount']         = $params['amount'];
             $this->session->data['nuvei_last_oo_details']['billingAddress']['country'] 
                 = $params['billingAddress']['country'];
             

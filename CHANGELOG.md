@@ -2,6 +2,11 @@
 
 ---
 
+# 1.6
+```
+    * Do not call updateOrder on SDK pre-payment method.
+```
+
 # 1.5
 ```
     * Fixed the URL to the current plugin repo, when check for new version.
