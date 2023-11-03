@@ -15,6 +15,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
     private $plugin_settings    = [];
     private $order_addresses    = [];
     private $new_order_status   = 0;
+    private $total_curr_alert   = false;
     
 	public function index(): string
     {
@@ -113,25 +114,20 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'i18n'                      => json_decode($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_transl'], true),
             'theme'                     => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_theme'],
 //            'apmWindowType'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'],
-//            'billingAddress'         => $order_data['billingAddress'],
-//            'userData'               => ['billingAddress' => $order_data['billingAddress']],
-            
         ];
         
         $data['language']               = $this->config->get('config_language');
         $data['NUVEI_CONTROLLER_PATH']  = NUVEI_CONTROLLER_PATH;
         $data['sdkUrl']                 = NUVEI_SDK_URL_PROD;
         
-//        if('prod' != $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_version']) {
-//            $data['nuvei_sdk_params']['webSdkEnv'] = 'dev';
-//        }
-        
         // check for product with a plan
-        if($subscriptions > 0) {
+        if($subscriptions > 0 || 0 == $order_data['amount']) {
             $data['nuvei_sdk_params']['pmWhitelist'][] = 'cc_card';
             unset($data['nuvei_sdk_params']['pmBlacklist']);
             
-            $data['is_nuvei_rebilling'] = 1;
+            if ($subscriptions > 0) {
+                $data['is_nuvei_rebilling'] = 1;
+            }
         }
         
         $data['NUVEI_PLUGIN_CODE']  = NUVEI_PLUGIN_CODE;
@@ -458,16 +454,19 @@ class Nuvei extends \Opencart\System\Engine\Controller
 //      \Nuvei_Class::create_log('manually stoped');
 //      die('manually stoped');
         
+        // exit
         if (\Nuvei_Class::get_param('type') == 'CARD_TOKENIZATION') {
             $this->return_message('DMN report: CARD_TOKENIZATION. The process ends here.');
         }
         
         $req_status = $this->get_request_status();
         
+        // exit
         if('pending' == strtolower($req_status)) {
             $this->return_message('DMN status is Pending. Wait for another status.');
 		}
         
+        // exit
         if(!$this->validate_dmn()) {
             $this->return_message('DMN report: You receive DMN from not trusted source. The process ends here.');
         }
@@ -625,7 +624,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'open_order()');
         
-        // chech for product quantity just before pay
+        // check for product quantity just before pay
 //        $this->load->model('checkout/cart');
 //        
 //        if ($is_ajax) {
@@ -657,6 +656,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $try_update_order       = false;
         $nuvei_last_oo_details  = [];
         $products_main_data     = $this->get_products_main_data($products);
+        $session_tr_type        = '';
         
         if (isset($this->session->data['nuvei_last_oo_details'])) {
             $nuvei_last_oo_details = $this->session->data['nuvei_last_oo_details'];
@@ -691,7 +691,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         ) {
             \Nuvei_Class::create_log(
                 $this->plugin_settings,
-                @$session_tr_type,
+                $session_tr_type,
                 '0-order with not allowed transaction type.'
             );
             
@@ -744,6 +744,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         $oo_params = array_merge_recursive($oo_params, $rebilling_params);
+        
+        $oo_params['merchantDetails']['customField1'] = $amount;
+        $oo_params['merchantDetails']['customField4'] = $this->order_info['currency_code'];
         
 		$resp = \Nuvei_Class::call_rest_api(
             'openOrder',
@@ -995,14 +998,29 @@ class Nuvei extends \Opencart\System\Engine\Controller
                 }
                 
                 // check for different Order Amount
-                if(in_array($transactionType, array('Sale', 'Settle')) && $order_total != $total_amount) {
-                    $msg = $this->language->get('Attention - the Order total is ') 
-                        . $this->order_info['currency_code'] . ' ' . $order_total
-                        . $this->language->get(', but the Captured amount is ')
-                        . \Nuvei_Class::get_param('currency')
-                        . ' ' . $total_amount . '.';
+                if(in_array($transactionType, array('Sale', 'Auth'))) {
+                    $original_amount    = (float) \Nuvei_Class::get_param('customField1');
+                    $original_curr      = \Nuvei_Class::get_param('customField4');
+                    
+                    if ($order_total != $total_amount && $order_total != $original_amount) {
+                        $this->total_curr_alert = true;
+                    }
+                    
+                    if ($this->order_info['currency_code'] != \Nuvei_Class::get_param('currency') 
+                        && $this->order_info['currency_code'] != $original_curr
+                    ) {
+                        $this->total_curr_alert = true;
+                    }
+                    
+                    if ($this->total_curr_alert) {
+                        $msg = $this->language->get('Attention - the Order total is ') 
+                            . $this->order_info['currency_code'] . ' ' . $order_total
+                            . $this->language->get(', but the Captured amount is ')
+                            . \Nuvei_Class::get_param('currency')
+                            . ' ' . $total_amount . '!';
 
-                    $this->model_checkout_order->addHistory($order_id, $status_id, $msg, false);
+                        $this->model_checkout_order->addHistory($order_id, $status_id, $msg, false);
+                    }
                 }
                 
 				$message .= $comment_details;
@@ -1128,6 +1146,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
 
         $rebilling_params   = $this->preprare_rebilling_params();
         $params             = array_merge_recursive($params, $rebilling_params);
+        
+        $oo_params['merchantDetails']['customField1'] = $amount;
+        $oo_params['merchantDetails']['customField4'] = $this->order_info['currency_code'];
         
 		$resp = \Nuvei_Class::call_rest_api(
             'updateOrder', 
@@ -1481,6 +1502,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'currency'              => \Nuvei_Class::get_param('currency'),
             'paymentMethod'         => \Nuvei_Class::get_param('payment_method'),
             'responseTimeStamp'     => \Nuvei_Class::get_param('responseTimeStamp'),
+            'originalTotal'         => \Nuvei_Class::get_param('customField1', FILTER_SANITIZE_STRING),
+            'originalCurrency'      => \Nuvei_Class::get_param('customField4', FILTER_SANITIZE_STRING),
+            'totalCurrAlert'        => $this->total_curr_alert,
         );
         
         // all data

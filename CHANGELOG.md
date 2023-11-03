@@ -5,6 +5,7 @@
 # 1.6
 ```
     * Do not call updateOrder on SDK pre-payment method.
+    * Enable Nuvei GW for Zero-Total Orders, but allow only Credit Cards.
 ```
 
 # 1.5

@@ -184,16 +184,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         // add events
         $this->load->model('setting/event');
         
-        // add checkout.js to the checkout header
-        $this->model_setting_event->addEvent([
-            'code'          => 'nuvei_load_sdk',
-            'description'   => 'Load Nuvei Checkout SDK into the catalog.',
-            'trigger'       => 'catalog/controller/checkout/checkout/before', 
-            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_sdk_lib'),
-            'status'        => 1,
-            'sort_order'    => 1,
-        ]);
-        
+        # admin
         // add nuvei_orders.js to the admin
         $this->model_setting_event->addEvent([
             'code'          => 'nuvei_load_orders_js',
@@ -210,6 +201,26 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'description'   => 'Load Nuvei Plugin version checker JS.',
             'trigger'       => 'admin/controller/common/header/before', 
             'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_version_checker'),
+            'status'        => 1,
+            'sort_order'    => 1,
+        ]);
+        
+        $this->model_setting_event->addEvent([
+            'code'          => 'nuvei_order_list_mod',
+            'description'   => 'Use it for some modification of Orders list.',
+            'trigger'       => \Nuvei_Version_Resolver::get_event_action('admin/controller/sale/order|list/before'), 
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_order_list_mod'),
+            'status'        => 1,
+            'sort_order'    => 1,
+        ]);
+        
+        # catalog
+        // add checkout.js to the checkout header
+        $this->model_setting_event->addEvent([
+            'code'          => 'nuvei_load_sdk',
+            'description'   => 'Load Nuvei Checkout SDK into the catalog.',
+            'trigger'       => 'catalog/controller/checkout/checkout/before', 
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_sdk_lib'),
             'status'        => 1,
             'sort_order'    => 1,
         ]);
@@ -285,6 +296,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
         ) {
             $this->document->addScript('/extension/nuvei/admin/view/javascript/nuvei_version_checker.js');
         }
+    }
+    
+    public function event_order_list_mod()
+    {
+        \Nuvei_Class::create_log(func_get_args(), 'event_order_list_mod');
     }
     
     /**

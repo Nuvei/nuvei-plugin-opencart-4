@@ -43,6 +43,11 @@ class Nuvei extends \Opencart\System\Engine\Model
         $method_data    = [];
         $status         = $this->getStatus();
         
+        
+        if (!$this->cart->hasShipping()) {
+			$status = true;
+		}
+        
         if ($query->num_rows) {
             $status = true;
         }
@@ -79,9 +84,9 @@ class Nuvei extends \Opencart\System\Engine\Model
         else {
             $query = $this->db->query(
                 "SELECT * FROM " . DB_PREFIX . "zone_to_geo_zone "
-                ."WHERE geo_zone_id = '". (int)$this->config->get(NUVEI_SETTINGS_PREFIX . 'geo_zone_id') . "' "
-                    ."AND country_id = '" . (int)$address['country_id'] . "' "
-                    ."AND (zone_id = '" . (int)$address['zone_id'] . "' OR zone_id = '0')"
+                ."WHERE geo_zone_id = '". (int) $this->config->get(NUVEI_SETTINGS_PREFIX . 'geo_zone_id') . "' "
+                    ."AND country_id = '" . (int) $address['country_id'] . "' "
+                    ."AND (zone_id = '" . (int) $address['zone_id'] . "' OR zone_id = '0')"
             );
 
 			if ($query->num_rows) {
