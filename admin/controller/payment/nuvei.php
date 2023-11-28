@@ -208,7 +208,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->model_setting_event->addEvent([
             'code'          => 'nuvei_order_list_mod',
             'description'   => 'Use it for some modification of Orders list.',
-            'trigger'       => \Nuvei_Version_Resolver::get_event_action('admin/controller/sale/order|list/before'), 
+            'trigger'       => \Nuvei_Version_Resolver::get_event_action('admin/model/sale/order|getOrders/after'), 
             'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_order_list_mod'),
             'status'        => 1,
             'sort_order'    => 1,
@@ -298,9 +298,66 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
     }
     
-    public function event_order_list_mod()
+    /**
+     * In Order list check for suspected fraud Orders and mark them.
+     * 
+     * @param string $path
+     * @param array $filters
+     * @param array $orders
+     * 
+     * @return void|array
+     */
+    public function event_order_list_mod($path, $filters, $orders)
     {
-        \Nuvei_Class::create_log(func_get_args(), 'event_order_list_mod');
+        if (empty($orders)) {
+            return;
+        }
+        
+        $fraud_orders   = [];
+        $order_ids      = array_column($orders, 'order_id');
+        
+        if (empty($order_ids)) {
+            \Nuvei_Class::create_log(
+                [$orders, $order_ids],
+                'There are no Order IDs.'
+            );
+        }
+        
+        $query =
+            "SELECT order_id, payment_custom_field "
+            . "FROM ". DB_PREFIX ."order "
+            . "WHERE order_id IN (" . implode(',', array_reverse($order_ids)) . ") "
+                . "AND payment_method LIKE '%" . NUVEI_PLUGIN_CODE . "%' "
+                . "AND payment_custom_field <> '[]' ";
+
+        $res = $this->db->query($query);
+        
+        if (0 == $res->num_rows) {
+            return;
+        }
+        
+        foreach ($res->rows as $key => $order) {
+            $nuvei_transactions = json_decode($order['payment_custom_field'], true);
+            
+            foreach ($nuvei_transactions as $tr) {
+                if (!empty($tr['totalCurrAlert'])) {
+                    $fraud_orders[] = $order['order_id'];
+                    break;
+                }
+            }
+        }
+        
+        if (empty($fraud_orders)) {
+            return;
+        }
+        
+        foreach ($orders as $key => $ord) {
+            if (in_array($ord['order_id'], $fraud_orders)) {
+                $orders[$key]['order_status'] .= '&nbsp;<i class="fa-solid fa-circle-exclamation" style="color: #ff0000;" title="Check transacted amount/currency!"></i>';
+            }
+        }
+        
+        return $orders;
     }
     
     /**

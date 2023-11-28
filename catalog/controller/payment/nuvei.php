@@ -737,7 +737,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		);
         
         // change urlDetails
-        if (1 == @$this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_close_apm_popup']) {
+        if (!empty($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_close_apm_popup'])) {
             $oo_params['urlDetails']['successUrl']  = $oo_params['urlDetails']['failureUrl']
                                                     = $oo_params['urlDetails']['pendingUrl']
                                                     = NUVEI_SDK_AUTOCLOSE_URL;
