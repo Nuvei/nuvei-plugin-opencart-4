@@ -84,7 +84,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $save_pm = 'always';
         }
         
-        $test_mode = $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'test_mode'];
+        $test_mode  = $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'test_mode'];
+        $useDCC     = $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_dcc'];
+        
+        if (0 == $order_data['amount']) {
+            $useDCC = 'false';
+        }
         
         $data['nuvei_sdk_params'] = [
             'renderTo'                  => '#nuvei_checkout',
@@ -99,7 +104,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'country'                   => $order_data['billingAddress']['country'],
             'currency'                  => $order_data['currency'],
             'amount'                    => $order_data['amount'],
-            'useDCC'                    => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'use_dcc'],
+            'useDCC'                    => $useDCC,
             'savePM'                    => $save_pm,
             'showUserPaymentOptions'    => $use_upos,
             'pmWhitelist'               => null,
