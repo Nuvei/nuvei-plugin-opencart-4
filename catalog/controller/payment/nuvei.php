@@ -467,9 +467,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $req_status = $this->get_request_status();
         
         // exit
-        if('pending' == strtolower($req_status)) {
-            $this->return_message('DMN status is Pending. Wait for another status.');
-		}
+//        if('pending' == strtolower($req_status)) {
+//            $this->return_message('DMN status is Pending. Wait for another status.');
+//		}
         
         // exit
         if(!$this->validate_dmn()) {
@@ -1509,8 +1509,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'currency'              => \Nuvei_Class::get_param('currency'),
             'paymentMethod'         => \Nuvei_Class::get_param('payment_method'),
             'responseTimeStamp'     => \Nuvei_Class::get_param('responseTimeStamp'),
-            'originalTotal'         => \Nuvei_Class::get_param('customField1', FILTER_SANITIZE_STRING),
-            'originalCurrency'      => \Nuvei_Class::get_param('customField4', FILTER_SANITIZE_STRING),
+            'originalTotal'         => \Nuvei_Class::get_param('customField1'),
+            'originalCurrency'      => \Nuvei_Class::get_param('customField4'),
             'totalCurrAlert'        => $this->total_curr_alert,
         );
         
