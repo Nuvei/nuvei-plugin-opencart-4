@@ -947,12 +947,14 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $order_total    = $this->get_price($this->order_info['total']);
         
         $comment_details = '<br/>' 
-            . $this->language->get('Transaction ID: ') . $trans_id . '<br/>'
-            . $this->language->get('Related Transaction ID: ') . $rel_tr_id . '<br/>'
             . $this->language->get('Status: ') . $status . '<br/>'
             . $this->language->get('Transaction Type: ') . $transactionType . '<br/>'
-            . $this->language->get('Payment Method: ') . $payment_method . '<br/>';
-        
+            . $this->language->get('Transaction ID: ') . $trans_id . '<br/>'
+            . $this->language->get('Related Transaction ID: ') . $rel_tr_id . '<br/>'
+            . $this->language->get('Payment Method: ') . $payment_method . '<br/>'
+            . $this->language->get('Total Amount: ') . $total_amount . '<br/>'
+            . $this->language->get('Currency: ') . \Nuvei_Class::get_param('currency') . '<br/>';
+                
         switch($status) {
             case 'CANCELED':
                 $message = $this->language->get('Your request was Canceled.') . $comment_details;
