@@ -456,8 +456,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         \Nuvei_Class::create_log($this->plugin_settings, $_REQUEST, 'DMN request');
         
         ### Manual stop DMN is possible only in test mode
-//      \Nuvei_Class::create_log('manually stoped');
-//      die('manually stoped');
+//        \Nuvei_Class::create_log($this->plugin_settings, 'manually stoped');
+//        die('manually stoped');
         
         // exit
         if (\Nuvei_Class::get_param('type') == 'CARD_TOKENIZATION') {
@@ -483,6 +483,13 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->process_subs_payment();
         
         $this->get_order_info_by_dmn();
+        
+        // exit
+        if (!empty($this->order_info['payment_custom_field'])
+            && 'pending' == strtolower($req_status)
+        ) {
+            $this->return_message('This is Pending DMN, but Order is already processed.');
+        }
         
         $order_id = $this->order_info['order_id'];
         
@@ -1091,6 +1098,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
                 $status_id = $this->config->get(NUVEI_SETTINGS_PREFIX . 'failed_status_id');
                 break;
 
+            case 'PENDING':
+                $message = $this->language->get('The Transaction is Pending.') . $comment_details;
+                break;
+                
             default:
                 \Nuvei_Class::create_log($this->plugin_settings, $status, 'Unexisting status:');
         }
