@@ -7,6 +7,8 @@
     * Do not call updateOrder on SDK pre-payment method.
     * Enable Nuvei GW for Zero-Total Orders, but allow only Credit Cards.
     * Disable DCC when Order total is Zero.
+    * Added the amount and the currency into Order's notes.
+    * Save Order note for Pending DMN.
 ```
 
 # 1.5
