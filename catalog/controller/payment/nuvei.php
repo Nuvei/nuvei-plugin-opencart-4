@@ -124,6 +124,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $data['language']               = $this->config->get('config_language');
         $data['NUVEI_CONTROLLER_PATH']  = NUVEI_CONTROLLER_PATH;
         $data['sdkUrl']                 = NUVEI_SDK_URL_PROD;
+        $data['successUrl']             = $this->url->link(
+            'checkout/success',
+            'order_id=' . $this->session->data['order_id']
+                . '&language=' . $this->config->get('config_language'), 
+            true
+        );
         
         // check for product with a plan
         if($subscriptions > 0 || 0 == $order_data['amount']) {
@@ -350,101 +356,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
     }
     
-    public function confirm(): void
-    {
-        $this->load_settings();
-        $this->load->language(NUVEI_CONTROLLER_PATH);
-        
-        \Nuvei_Class::create_log($this->plugin_settings, $this->request->post, 'confirm page');
-
-		$json = [];
-                
-        // set errors
-		if (!isset($this->session->data['order_id'])) {
-            \Nuvei_Class::create_log($this->plugin_settings, 'Missing session order_id.');
-            
-			$json['error'] = $this->language->get('error_order_id');
-		}
-        
-        if (empty($this->session->data['payment_method'])) {
-            \Nuvei_Class::create_log($this->plugin_settings, 'Session Payment method is empty.');
-            
-			$json['error'] = $this->language->get('error_payment_method');
-        }
-        
-        $session_payment_method = \Nuvei_Version_Resolver::get_checkout_pm($this->session->data);
-        
-        // expected "nuvei" or "nuvei.nuvei"
-		if (false === strpos($session_payment_method, NUVEI_PLUGIN_CODE)) {
-            \Nuvei_Class::create_log(
-                $this->plugin_settings,
-                [
-                    'NUVEI_PLUGIN_CODE'         => NUVEI_PLUGIN_CODE,
-                    'session payment_method'    => $this->session->data['payment_method'],
-                ],
-                'Payment method is incorrect.'
-            );
-            
-			$json['error'] = $this->language->get('error_payment_method');
-		}
-        
-        if(empty($this->request->post['nuvei_tr_id'])
-            || !is_numeric($this->request->post['nuvei_tr_id'])
-		) {
-            \Nuvei_Class::create_log($this->plugin_settings, 'nuvei_tr_id is empty or missing.');
-        
-			$json['error'] = $this->language->get('error_missing_tr_id');
-		}
-        // /set errors
-        
-		if (!$json) {
-            $this->load->model('checkout/order');
-            
-            $this->order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
-            
-            // the order is still invisible into the admin
-            if (isset($this->order_info['order_status_id'])
-                && (int) $this->order_info['order_status_id'] == 0
-            ) {
-                    $this->model_checkout_order->addHistory(
-                        $this->session->data['order_id'], 
-                        $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
-                    );
-                }
-                
-            // in case the DMN come firts do not override its status
-                
-//            if(isset($this->order_info['order_status_id'])
-//                && (int) $this->order_info['order_status_id'] == 0
-//            ) {
-//                $this->model_checkout_order->addHistory(
-//                    $this->session->data['order_id'], 
-//                    $this->order_info['order_status_id'], // 0
-//                    $this->language->get('nuvei_payment_complete'),
-//                    true
-//                );
-//            }
-//            else {
-//                $this->model_checkout_order->addHistory(
-//                    $this->session->data['order_id'], 
-//                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
-//                );
-//            }
-
-            $this->session->data['nuvei_last_oo_details'] = [];
-            
-			$json['redirect'] = $this->url->link(
-                'checkout/success',
-                'order_id=' . $this->session->data['order_id']
-                    . '&language=' . $this->config->get('config_language'), 
-                true
-            );
-        }
-        
-            $this->response->addHeader('Content-Type: application/json');
-            $this->response->setOutput(json_encode($json));
-    }
-    
     /**
      * Receive DMNs here
      */
@@ -570,15 +481,17 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         $this->response->addHeader('Content-Type: application/json');
 
-        if (!isset($this->session->data['order_id'])) {
+        if (empty($this->session->data['order_id'])) {
             \Nuvei_Class::create_log(
                 $this->plugin_settings,
                 $this->session->data,
-                'Missing Order ID into the session.',
-                'WARN'
+                'Missing Order ID into the session.'
             );
             
-            $this->response->setOutput(json_encode(['success' => 0]));
+            $this->response->setOutput(json_encode([
+                'success' => 0
+            ]));
+            return;
         }
 
         $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);

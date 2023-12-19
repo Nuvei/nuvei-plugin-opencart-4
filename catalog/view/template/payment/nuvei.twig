@@ -21,17 +21,17 @@
 
         return new Promise((resolve, reject) => {
             $.ajax({
-{#                url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|open_order',#}
                 url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|checkout_pre_payment',
                 type: 'post',
                 dataType: 'json'
             })
-            .fail(function(){
+            .fail(function() {
+                console.log('Nuvei pre-payment check fail.');
                 scFormFalse("{{ nuvei_order_error }}");
                 reject();
             })
             .done(function(resp) {
-                console.log(resp);
+                console.log('Nuvei pre-payment check done', resp);
         
                 if (!resp.hasOwnProperty('success') || 0 == resp.success) {
                     reject();
@@ -102,51 +102,12 @@
             && ( resp.result == 'APPROVED' || resp.result == 'PENDING' )
 
         ) {
-            $.ajax({
-                url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|confirm&language={{ language }}',
-                data: { nuvei_tr_id: resp.transactionId },
-                type: 'post',
-                dataType: 'json',
-
-                beforeSend: function () {
-                    $('#nuvei_blocker').removeClass('d-none');
-                    $('#nuvei_error').addClass('d-none');
-                },
-
-                {#complete: function (json) {
-                    console.log(json);
-                },#}
-
-                success: function (json) {
-                    console.log(json);
-                    
-                    if (json.hasOwnProperty('redirect') && '' != json['redirect']) {
-                        window.location = json['redirect'];
-                        return;
-                    }
-
-                    if (json.hasOwnProperty('error') && '' != json['error']) {
-                        checkout.destroy();
-                        $('#nuvei_blocker').hide();
-
-                        alert('{{ error_paid_order }}' . resp.transactionId);
-                        return;
-                    }
-                },
-
-                error: function (xhr, ajaxOptions, thrownError) {
-                    console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
-
-                    checkout.destroy();
-                    $('#nuvei_blocker').hide();
-                    alert(xhr.responseText);
-
-                    return;
-                }
-            });
+            window.location = "{{ successUrl }}";
+            return;
         }
+        
         // declined
-        else if (resp.result == 'DECLINED') {
+        if (resp.result == 'DECLINED') {
             if (resp.hasOwnProperty('errorDescription')
                 && 'insufficient funds' == resp.errorDescription.toLowerCase()
             ) {
@@ -157,20 +118,19 @@
             scFormFalse("{{ nuvei_order_declined }}");
             return;
         }
+        
         // other error
-        else {
-            if (resp.hasOwnProperty('reason')) {
-                scFormFalse(resp.reason);
-                return;
-            }
-            
-            if (resp.hasOwnProperty('errorDescription')) {
-                scFormFalse(resp.errorDescription);
-                return;
-            }
-
-            scFormFalse("{{ nuvei_order_error }}");
+        if (resp.hasOwnProperty('reason')) {
+            scFormFalse(resp.reason);
+            return;
         }
+
+        if (resp.hasOwnProperty('errorDescription')) {
+            scFormFalse(resp.errorDescription);
+            return;
+        }
+
+        scFormFalse("{{ nuvei_order_error }}");
     }
 
     function scFormFalse(_errorMsg) {

@@ -9,6 +9,7 @@
     * Disable DCC when Order total is Zero.
     * Added the amount and the currency into Order's notes.
     * Save Order note for Pending DMN.
+    * After success or pending response from the SDK directly redirect to confirm page.
 ```
 
 # 1.5
