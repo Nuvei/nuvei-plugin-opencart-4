@@ -350,6 +350,13 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
     }
     
+    /**
+     * We use this method only to set the Order to pending.
+     * 
+     * TODO - remove it in some of the next versions!
+     * 
+     * @return void
+     */
     public function confirm(): void
     {
         $this->load_settings();
@@ -579,6 +586,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             );
             
             $this->response->setOutput(json_encode(['success' => 0]));
+            return;
         }
 
         $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);

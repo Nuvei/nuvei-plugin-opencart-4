@@ -9,6 +9,7 @@
     * Disable DCC when Order total is Zero.
     * Added the amount and the currency into Order's notes.
     * Save Order note for Pending DMN.
+    * Fix for the pre-payment check, in case when in session missing the Order ID.
 ```
 
 # 1.5

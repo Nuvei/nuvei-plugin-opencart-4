@@ -102,6 +102,7 @@
             && ( resp.result == 'APPROVED' || resp.result == 'PENDING' )
 
         ) {
+            // TODO - remove this call in some of the next versions and redirect directly to success page at this point.
             $.ajax({
                 url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|confirm&language={{ language }}',
                 data: { nuvei_tr_id: resp.transactionId },
