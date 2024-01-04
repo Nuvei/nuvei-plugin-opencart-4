@@ -2,6 +2,11 @@
 
 ---
 
+# 1.7
+```
+    * Fix for the "SDK translations" setting example.
+```
+
 # 1.6
 ```
     * Do not call updateOrder on SDK pre-payment method.

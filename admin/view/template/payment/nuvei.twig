@@ -377,15 +377,13 @@
                             <div class="row mb-3">
                                 <label class="col-sm-2 col-form-label">{{ entry_sdk_transl }}</label>
                                 <div class="col-sm-10">
-                                    <textarea name="{{ nuvei_settings_prefix }}sdk_transl" class="form-control textarea-autosize" placeholder='{
-    "de": { 
-        "doNotHonor": "you dont have enough money",
-        "DECLINE": "declined"
-    },
-    "es": { 
-        "doNotHonor": "you dont have enough money",
-        "DECLINE": "declined"
-    }
+                                    <textarea 
+                                        name="{{ nuvei_settings_prefix }}sdk_transl" 
+                                        class="form-control textarea-autosize" 
+                                        rows="3"
+                                        placeholder='{
+"doNotHonor": "you dont have enough money",
+"DECLINE": "declined"
 }'></textarea>
                                     <span class="form-text">{{ text_sdk_transl_help }}</span>
                                 </div>
