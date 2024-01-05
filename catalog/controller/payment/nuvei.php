@@ -91,7 +91,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $useDCC = 'false';
         }
         
-        $locale = substr($this->get_locale(), 0, 2);
+        $locale     = substr($this->get_locale(), 0, 2);
+        $sdk_transl = html_entity_decode($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_transl']);
         
         $data['nuvei_sdk_params'] = [
             'renderTo'                  => '#nuvei_checkout',
@@ -118,7 +119,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'locale'                    => $locale,
             'autoOpenPM'                => (bool) $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_expand_pms'],
             'logLevel'                  => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_log_level'],
-            'i18n'                      => json_decode($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_transl'], true),
+            'i18n'                      => json_decode($sdk_transl, true),
             'theme'                     => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_theme'],
             'apmConfig'                 => [
                 'googlePay' => [
