@@ -131,7 +131,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         $data['language']               = $this->config->get('config_language');
         $data['NUVEI_CONTROLLER_PATH']  = NUVEI_CONTROLLER_PATH;
-        $data['sdkUrl']                 = NUVEI_SDK_URL_PROD;
+        $data['sdkUrl']                 = $this->getSdkUrl();
         
         // check for product with a plan
         if($subscriptions > 0 || 0 == $order_data['amount']) {
@@ -161,8 +161,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         \Nuvei_Class::create_log($this->plugin_settings, 'event_add_sdk_lib');
         
-        $this->document->addScript(NUVEI_SDK_URL_PROD);
-//        $this->document->addScript('extension/nuvei/catalog/view/javascript/nuvei_checkout.js');
+        $this->document->addScript($this->getSdkUrl());
     }
     
     /**
@@ -2083,5 +2082,23 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->db->query($query);
 
         $this->return_message('DMN Proccess Subscription Payment received.');
+    }
+    
+    /**
+     * Get the SDK URL depending from the server name.
+     * 
+     * @return string
+     */
+    private function getSdkUrl()
+    {
+        if (!empty($_SERVER['SERVER_NAME']) 
+            && 'opencart4021-automation.gw-4u.com' == $_SERVER['SERVER_NAME']
+            && defined('NUVEI_SDK_URL_TAG')
+        ) {
+            $this->document->addScript(NUVEI_SDK_URL_TAG);
+        }
+        else {
+            $this->document->addScript(NUVEI_SDK_URL_PROD);
+        }
     }
 }
