@@ -2092,8 +2092,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
     private function getSdkUrl()
     {
         if (!empty($_SERVER['SERVER_NAME']) 
-            && 'opencart4021-automation.gw-4u.com' == $_SERVER['SERVER_NAME']
             && defined('NUVEI_SDK_URL_TAG')
+            && defined('NUVEI_QA_HOSTS')
+            && in_array($_SERVER['SERVER_NAME'], NUVEI_QA_HOSTS)
         ) {
             return NUVEI_SDK_URL_TAG;
         }
