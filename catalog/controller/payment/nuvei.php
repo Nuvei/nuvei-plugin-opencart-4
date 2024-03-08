@@ -2095,10 +2095,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
             && 'opencart4021-automation.gw-4u.com' == $_SERVER['SERVER_NAME']
             && defined('NUVEI_SDK_URL_TAG')
         ) {
-            $this->document->addScript(NUVEI_SDK_URL_TAG);
+            return NUVEI_SDK_URL_TAG;
         }
-        else {
-            $this->document->addScript(NUVEI_SDK_URL_PROD);
-        }
+        
+        return NUVEI_SDK_URL_PROD;
     }
 }
