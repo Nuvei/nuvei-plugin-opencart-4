@@ -2,6 +2,16 @@
 
 ---
 
+# 1.8
+```
+    * Add option to mask/unmask user details in the log.
+```
+
+# 1.7-p1
+```
+    * Added Tag SDK URL for test cases.
+```
+
 # 1.7
 ```
     * Fix for the "SDK translations" setting example.
