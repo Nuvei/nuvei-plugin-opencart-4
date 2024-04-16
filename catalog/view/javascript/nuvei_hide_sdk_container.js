@@ -5,12 +5,11 @@ $( document ).ajaxComplete(function(event, xhr, setting) {
         && 'POST' == setting.type
         && setting.hasOwnProperty('url')
         && setting.url.search('checkout/payment_method.save') > -1
+        && $('#input-payment-code').length > 0
         && $('#input-payment-code').val().search(nuveiPluginCode) == -1
     ) {
         $('#nuvei_checkout').hide();
     }
-    
-    
     
     // try to catch privacy and policy change
     if (typeof nuveiPluginTitle != 'undefined'
@@ -25,6 +24,5 @@ $( document ).ajaxComplete(function(event, xhr, setting) {
         else if ($('#input-payment-method').val() != nuveiPluginTitle) {
             $('#nuvei_checkout').hide();
         }
-        
     }
 });

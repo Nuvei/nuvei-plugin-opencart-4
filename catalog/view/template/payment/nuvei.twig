@@ -13,6 +13,9 @@
 
         console.log(nuveiCheckoutSdkParams);
 
+        if (typeof checkout.destroy == 'function') {
+            checkout.destroy();
+        }
         checkout(nuveiCheckoutSdkParams);
     }
 
