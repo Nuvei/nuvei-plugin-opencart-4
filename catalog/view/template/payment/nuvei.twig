@@ -44,31 +44,6 @@
                 
                 resolve();
                 return;
-                
-                {#if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
-                    if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
-                        resolve();
-                        return;
-                    }
-
-                    console.log(resp);
-
-                    // reload the Checkout
-                    nuveiCheckoutSdkParams.sessionToken = resp.sessionToken;
-                    nuveiCheckoutSdkParams.amount       = resp.amount;
-
-                    showNuveiCheckout();
-                    return;
-                }
-                
-                if (resp.hasOwnProperty('msg') && '' != resp.msg) {
-                    scFormFalse(resp.msg);
-                    reject();
-                    return;
-                }
-
-                scFormFalse("{{ nuvei_order_error }}");
-                reject();#}
             });
 
         });

@@ -7,6 +7,7 @@
     * Add option to mask/unmask user details in the log.
     * Fixed a JS check on the checkout page.
     * Destroy the checkout object before calling it.
+    * Show the plugin version in Help Tools.
 ```
 
 # 1.7-p1

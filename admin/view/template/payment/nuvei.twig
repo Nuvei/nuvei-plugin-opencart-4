@@ -276,7 +276,7 @@
                                     
                             <!-- Block cards -->
                             <div class="row mb-3">
-                                <label class="col-sm-2 col-form-label">{{ entry_block_cards }}:</label>
+                                <label class="col-sm-2 col-form-label">{{ entry_block_cards }}</label>
                                 <div class="col-sm-10">
                                     <input type="text" name="{{ nuvei_settings_prefix }}block_cards" value="{{ _context[nuvei_settings_prefix ~ 'block_cards'] }}" placeholder="{{ entry_sort_order }}" class="form-control" />
                                     
@@ -419,6 +419,14 @@
                                 <label class="col-sm-2 col-form-label">{{ entry_dmn_url }}</label>
                                 <div class="col-sm-10">
                                     <input type="text" value="{{ nuvei_dmn_url }}" class="form-control" readonly />
+                                </div>
+                            </div>
+                                
+                            <!-- Plugin version -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_plugin_version }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" value="{{ nuvei_plugin_v }}" class="form-control" readonly />
                                 </div>
                             </div>
                         </div>

@@ -128,31 +128,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $data['nuvei_pms'] = $this->get_payment_methods();
         
         // DMN URL
-        $data['nuvei_dmn_url'] = str_replace('admin/', '', $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback'));
-//
-        // set statuses manually
-//        $statuses = array(
-//            1   => 'pending_status_id',
-//            5   => 'order_status_id',
-//            7   => 'canceled_status_id',
-//            10  => 'failed_status_id',
-//            11  => 'refunded_status_id',
-////            13  => 'chargeback_status_id',
-//        );
-//        
-//        foreach($statuses as $id => $name) {
-//            if (isset($this->request->post[NUVEI_SETTINGS_PREFIX . $name])) {
-//                $data[NUVEI_SETTINGS_PREFIX . $name] = $this->request->post[NUVEI_SETTINGS_PREFIX . $name];
-//            }
-//            elseif (isset($this->plugin_settings [NUVEI_SETTINGS_PREFIX . $name])) {
-//                $data[NUVEI_SETTINGS_PREFIX . $name] = $this->config->get(NUVEI_SETTINGS_PREFIX . $name); 
-//            }
-//            else {
-//                $data[NUVEI_SETTINGS_PREFIX . $name] = $id;
-//            }
-//        }
-//        // /set statuses manually
-//        
+        $data['nuvei_dmn_url']  = str_replace('admin/', '', $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback'));
+        $data['nuvei_plugin_v'] = \Nuvei_Class::get_plugin_version();
+
         // get all statuses
 		$this->load->model('localisation/order_status');
 		$data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
@@ -161,15 +139,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		$this->load->model('localisation/geo_zone');
 		$data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();
 
-//        if (isset($this->session->data['success'])) {
-//            $data['success'] = $this->session->data['success'];
-//            unset($this->session->data['success']);
-//        }
-//        elseif (isset($this->session->data['error_warning'])) {
-//            $data['error_warning'] = $this->session->data['error_warning'];
-//            unset($this->session->data['error_warning']);
-//        }
-//        
         // set template parts
         $data['header']         = $this->load->controller('common/header');
         $data['column_left']    = $this->load->controller('common/column_left');
