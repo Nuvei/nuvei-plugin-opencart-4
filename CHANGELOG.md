@@ -9,6 +9,7 @@
     * Destroy the checkout object before calling it.
     * Show the plugin version in Help Tools.
     * Fix for the sourceApplication parameter.
+    * Pass sourceApplication to Simply Connect.
 ```
 
 # 1.7-p1

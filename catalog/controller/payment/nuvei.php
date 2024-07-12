@@ -126,6 +126,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
                     'locale' => $locale
                 ]
             ],
+            'sourceApplication'         => NUVEI_SOURCE_APP
 //            'apmWindowType'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'],
         ];
         
