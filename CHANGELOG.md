@@ -10,6 +10,7 @@
     * Show the plugin version in Help Tools.
     * Fix for the sourceApplication parameter.
     * Pass sourceApplication to Simply Connect.
+    * Fix for the problem on the Checkout when the client try to get available payment methods. This problem was result of changed method name in OC4 Cart object.
 ```
 
 # 1.7-p1

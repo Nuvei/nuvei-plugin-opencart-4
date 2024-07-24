@@ -25,7 +25,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->language->load(NUVEI_CONTROLLER_PATH);
         
         $data                   = [];
-        $subscriptions          = count($this->cart->getSubscription());
+//        $subscriptions          = count($this->cart->getSubscription());
+        $subscriptions          = count($this->getSubscriptions());
         $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         $this->order_addresses  = $this->get_order_addresses();
         $this->is_user_logged   = !empty($this->session->data['customer_id']) ? 1 : 0;
@@ -336,7 +337,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         \Nuvei_Class::create_log($this->plugin_settings, $methods, 'event_filter_payment_providers');
         
-        $rebilling_data     = $this->cart->getSubscription();
+//        $rebilling_data     = $this->cart->getSubscription();
+        $rebilling_data     = $this->getSubscriptions();
         $remove_providers   = false;
         
         if(count($rebilling_data) > 0) {
@@ -1316,7 +1318,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         # check for a product with a Payment Plan
-        $rebilling_data = $this->cart->getSubscription();
+//        $rebilling_data = $this->cart->getSubscription();
+        $rebilling_data = $this->getSubscriptions();
         
         \Nuvei_Class::create_log($this->plugin_settings, $rebilling_data, 'Rebilling products data');
         
@@ -2101,5 +2104,32 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         return NUVEI_SDK_URL_PROD;
+    }
+    
+    /**
+     * A helper class to find correct name of the method in the Cart object.
+     * Looks like OC developers like to change method names in new releases...
+     * 
+     * @return array
+     */
+    private function getSubscriptions()
+    {
+        // for OC4 before v4.0.2.3, at least we detect it in this version
+        if (method_exists($this->cart, 'getSubscription')) {
+            return $this->cart->getSubscription();
+        }
+        
+        // the new nema in at least OC4 v4.0.2.3
+        if (method_exists($this->cart, 'getSubscriptions')) {
+            return $this->cart->getSubscriptions();
+        }
+        
+        \Nuvei_Class::create_log(
+            '', 
+            'The plugin can not find the method who get the subscriptions in the Cart object', 
+            'WARN'
+        );
+        
+        return [];
     }
 }
