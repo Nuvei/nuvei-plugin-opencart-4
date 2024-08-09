@@ -20,13 +20,14 @@ class Nuvei extends \Opencart\System\Engine\Model
                 ."AND (zone_id = '" . (int)$address['zone_id'] . "' OR zone_id = '0')"
         );
 		
-//        if ($this->cart->hasSubscription()) {
+        // Temporary disable plugin for subscriprions
+        if ($this->cart->hasSubscription()) {
 //            if (!$this->customer->isLogged()) {
 //                $status = false;
 //            }
 //
-//            $status = true;
-//		}
+            $status = false;
+		}
 //        elseif (!$this->cart->hasShipping()) {
 //			$status = false;
 //		}
@@ -94,6 +95,11 @@ class Nuvei extends \Opencart\System\Engine\Model
 			} else {
 				$status = false;
 			}
+		}
+        
+        // Temporary disable plugin for subscriprions
+        if ($this->cart->hasSubscription()) {
+            $status = false;
 		}
         
         $method_data = [];

@@ -25,7 +25,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->language->load(NUVEI_CONTROLLER_PATH);
         
         $data                   = [];
-//        $subscriptions          = count($this->cart->getSubscription());
         $subscriptions          = count($this->getSubscriptions());
         $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         $this->order_addresses  = $this->get_order_addresses();
@@ -337,7 +336,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         \Nuvei_Class::create_log($this->plugin_settings, $methods, 'event_filter_payment_providers');
         
-//        $rebilling_data     = $this->cart->getSubscription();
         $rebilling_data     = $this->getSubscriptions();
         $remove_providers   = false;
         
@@ -366,6 +364,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
      * TODO - remove it in some of the next versions!
      * 
      * @return void
+     * @deprecated since version 1.8
      */
     public function confirm(): void
     {
@@ -429,25 +428,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
                     );
                 }
                 
-            // in case the DMN come firts do not override its status
-                
-//            if(isset($this->order_info['order_status_id'])
-//                && (int) $this->order_info['order_status_id'] == 0
-//            ) {
-//                $this->model_checkout_order->addHistory(
-//                    $this->session->data['order_id'], 
-//                    $this->order_info['order_status_id'], // 0
-//                    $this->language->get('nuvei_payment_complete'),
-//                    true
-//                );
-//            }
-//            else {
-//                $this->model_checkout_order->addHistory(
-//                    $this->session->data['order_id'], 
-//                    $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
-//                );
-//            }
-
             $this->session->data['nuvei_last_oo_details'] = [];
             
 			$json['redirect'] = $this->url->link(
@@ -509,14 +489,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         $order_id = $this->order_info['order_id'];
-        
-        // do not override Order status
-//        if($this->order_info['order_status_id'] > 0
-//            && $this->order_info['order_status_id'] != $this->config->get(NUVEI_SETTINGS_PREFIX . 'pending_status_id')
-//            && 'pending' == strtolower($req_status)
-//        ) {
-//            $this->return_message('DMN Message - do not override current Order status with Pending');
-//        }
         
         $this->new_order_status = $this->order_info['order_status_id'];
         
@@ -754,7 +726,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		$oo_params = array(
 			'clientUniqueId'	=> $this->session->data['order_id'] . '_' . uniqid(),
 			'amount'            => $amount,
-            'transactionType'	=> (float) $amount == 0 ? 'Auth' : $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'payment_action'],
+            'transactionType'	=> (float) $amount == 0 
+                ? 'Auth' : $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'payment_action'],
 			'currency'          => $this->order_info['currency_code'],
             'userDetails'       => $this->order_addresses['billingAddress'],
 			'billingAddress'	=> $this->order_addresses['billingAddress'],
@@ -1208,19 +1181,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $this->session->data['nuvei_last_oo_details']['billingAddress']['country'] 
                 = $params['billingAddress']['country'];
             
-            // set the order status to Pending if enabled into plugin settings
-//            if(isset($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'change_order_status'])
-//                && 1 == (int) $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'change_order_status']
-//            ) {
-//                $pending_status = (int) $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'pending_status_id'];
-//
-//                $this->db->query(
-//                    "UPDATE " . DB_PREFIX ."order "
-//                    . "SET order_status_id = {$pending_status} "
-//                    . "WHERE order_id = " . (int) $this->session->data['order_id']
-//                );
-//            }
-            
 			return array_merge($resp, $params);
 		}
 		
@@ -1318,7 +1278,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         # check for a product with a Payment Plan
-//        $rebilling_data = $this->cart->getSubscription();
         $rebilling_data = $this->getSubscriptions();
         
         \Nuvei_Class::create_log($this->plugin_settings, $rebilling_data, 'Rebilling products data');
@@ -1765,9 +1724,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         \Nuvei_Class::create_log(
             $this->plugin_settings,
-//            [
-//                'order info'    => $this->order_info,
-//            ],
+//            ['order info'    => $this->order_info,],
             'subscription_cancel()'
         );
         

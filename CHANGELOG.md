@@ -11,6 +11,7 @@
     * Fix for the sourceApplication parameter.
     * Pass sourceApplication to Simply Connect.
     * Fix for the problem on the Checkout when the client try to get available payment methods. This problem was result of changed method name in OC4 Cart object.
+    * The plugin was disabled for products with Subscription. All events which serve subscriprion logic are also disabled. The functionality will be enable when OC4 provaide stable Subscriptions logic.
 ```
 
 # 1.7-p1
