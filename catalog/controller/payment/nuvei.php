@@ -551,6 +551,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
     
     public function checkout_pre_payment(): void
     {
+        \Nuvei_Class::create_log(
+            $this->plugin_settings,
+            'checkout_pre_payment()'
+        );
+        
         // load needed models
         $this->load->model('account/address');
         $this->load->model('checkout/cart');
@@ -574,6 +579,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->order_info       = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         $this->order_addresses  = $this->get_order_addresses();
         $products               = $this->get_products_main_data($this->model_checkout_cart->getProducts());
+        $serializedProducts     = md5(serialize($products));
         $nuvei_last_oo_details  = [];
         
         if (isset($this->session->data['nuvei_last_oo_details'])) {
@@ -583,36 +589,61 @@ class Nuvei extends \Opencart\System\Engine\Controller
         \Nuvei_Class::create_log(
             $this->plugin_settings,
             [
-                $nuvei_last_oo_details,
-                $products,
-                md5(serialize($products))
+                '$nuvei_last_oo_details'    => $nuvei_last_oo_details,
+                'main products data'        => $products,
+                'products'                  => $this->model_checkout_cart->getProducts(),
+                '$serializedProducts'       => $serializedProducts
             ]
         );
         
         // success
         if (!empty($nuvei_last_oo_details['productsHash'])
-            && $nuvei_last_oo_details['productsHash'] == md5(serialize($products))
+            && $nuvei_last_oo_details['productsHash'] == $serializedProducts
         ) {
             $this->response->setOutput(json_encode(['success' => 1]));
             return;
         }
+        
+        \Nuvei_Class::create_log(
+            $this->plugin_settings,
+            'Current products hash do not match the hash into the session. Reload the checkout.'
+        );
         
         // on error
         $this->response->setOutput(json_encode(['success' => 0]));
         return;
     }
     
+    /**
+     * Get only main data for each products and use it for hash later.
+     * 
+     * @param array $products
+     * @return array
+     */
     private function get_products_main_data($products): array
     {
         $products_main_data = [];
         
         foreach ($products as $product) {
+            $prodOption = [];
+            
+            if (!empty($product['option']) && is_array($product['option'])) {
+                foreach ($product['option'] as $key => $optData) {
+                    $prodOption[$key] = [
+                        'product_option_id'         => @$optData['product_option_id'],
+                        'product_option_value_id'   => @$optData['product_option_value_id'],
+                        'option_id'                 => @$optData['option_id'],
+                        'option_value_id'           => @$optData['option_value_id'],
+                    ];
+                }
+            }
+            
             $products_main_data[] = [
                 'cart_id'       => @$product['cart_id'],
                 'product_id'    => @$product['product_id'],
                 'name'          => @$product['name'],
                 'model'         => @$product['model'],
-                'option'        => @$product['option'],
+                'option'        => $prodOption,
                 'quantity'      => @$product['quantity'],
                 'price'         => @$product['price'],
                 'total'         => @$product['total'],
@@ -715,6 +746,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
         
         if ($try_update_order) {
+            \Nuvei_Class::create_log(
+                $this->plugin_settings,
+                $products_main_data,
+                'open_order() $products_main_data'
+            );
+            
             $resp = $this->update_order($products_main_data);
             
             if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
@@ -1111,9 +1148,13 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->new_order_status = $status_id;
     }
     
+    /**
+     * @param array $products Main products data.
+     * @return array
+     */
     private function update_order($products)
     {
-        \Nuvei_Class::create_log($this->plugin_settings, 'update_order()');
+        \Nuvei_Class::create_log($this->plugin_settings, $products, 'update_order()');
         
         if (empty($this->session->data['nuvei_last_oo_details'])
 			|| empty($this->session->data['nuvei_last_oo_details']['sessionToken'])
@@ -1168,15 +1209,17 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         # Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
+            $serializedProducts = md5(serialize($products));
+            
             \Nuvei_Class::create_log(
                 $this->plugin_settings,
                 [
-                    $products,
-                    md5(serialize($products))
+                    '$products'             => $products,
+                    '$serializedProducts'   => $serializedProducts
                 ]
             );
             
-            $this->session->data['nuvei_last_oo_details']['productsHash']   = md5(serialize($products));
+            $this->session->data['nuvei_last_oo_details']['productsHash']   = $serializedProducts;
             $this->session->data['nuvei_last_oo_details']['amount']         = $params['amount'];
             $this->session->data['nuvei_last_oo_details']['billingAddress']['country'] 
                 = $params['billingAddress']['country'];

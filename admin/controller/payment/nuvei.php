@@ -673,8 +673,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
     }
     
     /**
-     * We use one function for both because the only
-     * difference is the endpoint, all parameters are same
+     * We use one function for Sattle and Void because the only
+     * difference is the endpoint, all parameters are same.
      */
     public function settle(): string
     {
@@ -726,6 +726,16 @@ class Nuvei extends \Opencart\System\Engine\Controller
             )));
         }
         
+        $lastStatus     = $this->data['order_status_id'];
+        $pendingStatus  = $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'pending_status_id'];
+        
+        // first set the pending status
+        $this->db->query(
+            'UPDATE ' . DB_PREFIX . 'order '
+            . 'SET order_status_id = ' . (int) $pendingStatus . ' '
+            . 'WHERE order_id = ' . $order_id
+        );
+        
         # normal Void or Settle
         $params = array(
             'clientRequestId'       => $time . '_' . uniqid(),
@@ -751,6 +761,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
             || (isset($resp['status']) && $resp['status'] == 'ERROR')
             || (isset($resp['transactionStatus']) && $resp['transactionStatus'] == 'ERROR')
         ) {
+            // revert the status
+            $this->model_checkout_order->addHistory($order_id, $lastStatus);
+            
 			header('Content-Type: application/json');
             exit(json_encode(array(
                 'status'    => 0,
@@ -759,19 +772,16 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
 		// decline
 		if(isset($resp['transactionStatus']) && $resp['transactionStatus'] == 'DECLINED') {
+            $this->model_checkout_order->addHistory($order_id, $lastStatus);
+            
 			header('Content-Type: application/json');
             exit(json_encode(array(
                 'status'    => 0,
                 'msg'       => $this->language->get('error_req_denied')
             )));
         }
+        
         // approve
-        $this->db->query(
-            'UPDATE ' . DB_PREFIX . 'order '
-            . 'SET order_status_id = 2 ' // processing
-            . 'WHERE order_id = ' . $order_id
-        );
-		
         header('Content-Type: application/json');
         exit(json_encode(array(
             'status' => 1,
