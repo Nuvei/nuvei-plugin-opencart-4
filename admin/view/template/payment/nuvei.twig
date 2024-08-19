@@ -135,8 +135,8 @@
                                         <option value="" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == '' %} selected=""{% endif %}>{{ text_select_option }}</option>
                                         <option value="single" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == 'single' %} selected=""{% endif %}>{{ text_single_file }}</option>
                                         <option value="daily" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == 'daily' %} selected=""{% endif %}>{{ text_daily_files }}</option>
-                                        <option value="both" {% if _context[nuvei_settings_prefix ~ 'both_logs']  == 'daily' %} selected=""{% endif %}>{{ text_both_files }}</option>
-                                        <option value="no" {% if _context[nuvei_settings_prefix ~ 'no_logs']  == 'daily' %} selected=""{% endif %}>{{ text_no }}</option>
+                                        <option value="both" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == 'both' %} selected=""{% endif %}>{{ text_both_files }}</option>
+                                        <option value="no" {% if _context[nuvei_settings_prefix ~ 'create_logs']  == 'no' %} selected=""{% endif %}>{{ text_no }}</option>
                                     </select>
                                 </div>
                             </div>
