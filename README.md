@@ -5,7 +5,7 @@
 - Enabled DMN notifications to the merchant account.  
 - Public access to the plugin notification URL. It can be found in plugin settings Help Tools.
 
-## Manual installation
+## Manual Installation
 1. Download the plugin and extract the content of the ZIP file.
 2. Open the result folder, mark all files and folders, and add them to the ZIP file.
 3. Set or change the name of the ZIP file to "nuvei.ocmod.zip".
