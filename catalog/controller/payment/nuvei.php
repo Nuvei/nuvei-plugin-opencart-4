@@ -130,6 +130,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
 //            'apmWindowType'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'],
         ];
         
+        if ($this->isQaSite()) {
+            $data['nuvei_sdk_params']['webSdkEnv'] = 'devmobile';
+        }
+        
         $data['language']               = $this->config->get('config_language');
         $data['NUVEI_CONTROLLER_PATH']  = NUVEI_CONTROLLER_PATH;
         $data['sdkUrl']                 = $this->getSdkUrl();
@@ -2095,15 +2099,29 @@ class Nuvei extends \Opencart\System\Engine\Controller
      */
     private function getSdkUrl()
     {
+        if (isQaSite()) {
+            return NUVEI_SDK_URL_TAG;
+        }
+        
+        return NUVEI_SDK_URL_PROD;
+    }
+    
+    /**
+     * Check for the QA site.
+     * 
+     * @return bool
+     */
+    private function isQaSite()
+    {
         if (!empty($_SERVER['SERVER_NAME']) 
             && defined('NUVEI_SDK_URL_TAG')
             && defined('NUVEI_QA_HOSTS')
             && in_array($_SERVER['SERVER_NAME'], NUVEI_QA_HOSTS)
         ) {
-            return NUVEI_SDK_URL_TAG;
+            return true;
         }
         
-        return NUVEI_SDK_URL_PROD;
+        return false;
     }
     
     /**

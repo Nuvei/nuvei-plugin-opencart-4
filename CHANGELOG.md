@@ -2,6 +2,11 @@
 
 ---
 
+# 1.9
+```
+    * Added a specific parameter to the Simple Connect when the plugin is used on QA site.
+```
+
 # 1.8
 ```
     * Add option to mask/unmask user details in the log.
