@@ -5,6 +5,7 @@
 # 1.9
 ```
     * Added a specific parameter to the Simple Connect when the plugin is used on QA site.
+    * Removed the plugin option to auto-close or not the APM popup.
 ```
 
 # 1.8
