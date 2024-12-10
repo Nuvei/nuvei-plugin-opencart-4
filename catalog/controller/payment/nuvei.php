@@ -2099,7 +2099,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
      */
     private function getSdkUrl()
     {
-        if (isQaSite()) {
+        if ($this->isQaSite()) {
             return NUVEI_SDK_URL_TAG;
         }
         
