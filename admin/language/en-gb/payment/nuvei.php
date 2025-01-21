@@ -57,6 +57,8 @@ $_['text_no_github_plugin_version']     = 'Nuvei message - can not find the plug
 $_['text_github_plugin_same_version']   = 'Git version is same as the current plugin version.';
 $_['text_github_new_plugin_version']    = 'There is <a href="https://github.com/SafeChargeInternational/nuvei_checkout_opencart3/blob/main/CHANGELOG.md">newer version</a> for Nuvei Checkout plugin.';
 
+$_['text_block_auto_void'] = 'Allow plugin to initiate auto Void request in case there is Payment (transaction), but there is no Order for this transaction in the Store. This logic is based on incoming DMNs. Event the auto Void is disabled, a notification will be saved.';
+
 // Entry					
 $_['entry_merchantId']      = 'Merchant ID:';
 $_['entry_merchantSiteId']  = 'Merchant Site ID:';
@@ -104,6 +106,7 @@ $_['nuvei_btn_remove_help']         = 'Only the oldest logs will be removed. The
 $_['nuvei_remove_log_confirm']      = 'Are you sure, you want to delete the logs?';
 $_['entry_sdk_version_help']        = 'It is not recommended to use Dev version on Production sites.';
 $_['entry_confirm_cancel_subs']     = 'Are you sure, you want to cancel the Nuvei Subsciption?';
+$_['entry_enable_auto_void']        = 'Enable Auto Void:';
 
 // Error					
 $_['error_permission']	      		= 'Warning: You do not have permission to modify Nuvei!';

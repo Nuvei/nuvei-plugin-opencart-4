@@ -1472,10 +1472,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
         }
 
         // exit
-        if ($curr_time - $order_request_time > 1800) {
-            http_response_code(400);
-            $this->return_message("There is no order info, Let's wait one more DMN try.");
-        }
+//        if ($curr_time - $order_request_time > 1800) {
+//            http_response_code(400);
+//            $this->return_message("There is no order info, Let's wait one more DMN try.");
+//        }
         //
         
         $transId = \Nuvei_Class::get_param('TransactionID');
@@ -1483,6 +1483,14 @@ class Nuvei extends \Opencart\System\Engine\Controller
         // save notification
         $this->load->model('extension/nuvei/payment/nuvei');
         $this->model_extension_nuvei_payment_nuvei->addAdminNotification($transId);
+        
+        // when auto-void is disabled
+        if (!isset($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'enable_auto_void'])
+            || 'yes' != $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'enable_auto_void']
+        ) {
+            \Nuvei_Class::create_log($this->plugin_settings, 'The Auto Void is disabled.');
+            return;
+        }
         
         $notify_url     = $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback');
         $void_params    = [

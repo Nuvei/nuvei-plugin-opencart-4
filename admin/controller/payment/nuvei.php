@@ -14,6 +14,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         'secret',
         'hash',
         'payment_action',
+        'enable_auto_void',
         'create_logs',
     ];
     
