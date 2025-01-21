@@ -453,6 +453,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
     {
         $this->load_settings();
         $this->load->model('checkout/order');
+        $this->load->language(NUVEI_CONTROLLER_PATH);
         
         \Nuvei_Class::create_log($this->plugin_settings, $_REQUEST, 'DMN request');
         
@@ -1426,23 +1427,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->order_info = $this->model_checkout_order->getOrder($order_id);
         
         if (!is_array($this->order_info) || empty($this->order_info)) {
-            // create Auto-Void
-            $curr_time          = time();
-            $order_request_time	= \Nuvei_Class::get_param('customField2'); // time of create/update order
-            
-            if (!is_numeric($order_request_time)) {
-                $order_request_time = strtotime($order_request_time);
-            }
-            
-            if ($curr_time - $order_request_time > 1800) {
-                $this->create_auto_void();
-            }
-            // /create Auto-Void
-            
-            if (in_array($trans_type, ['Auth', 'Sale'])) {
-                http_response_code(400);
-                $this->return_message('There is no order info, Let\'s wait one more DMN try.');
-            }
+            $this->create_auto_void();
             
             http_response_code(200);
             $this->return_message('There is no order info.');
@@ -1463,22 +1448,48 @@ class Nuvei extends \Opencart\System\Engine\Controller
         return;
     }
     
+    /**
+     * Auto-void logic is here.
+     * 
+     * @return void
+     */
     private function create_auto_void()
     {
         \Nuvei_Class::create_log($this->plugin_settings, 'Try Auto Void.');
         
         // not allowed Auto-Void
         if (!in_array(\Nuvei_Class::get_param('transactionType'), array('Auth', 'Sale'), true)) {
-            \Nuvei_Class::create_log($this->plugin_settings, 'The transacion is not in allowed range.');
+            \Nuvei_Class::create_log($this->plugin_settings, 'The transacion is not of the allowed type.');
             return;
         }
+        
+        // time check
+        $curr_time          = time();
+        $order_request_time	= \Nuvei_Class::get_param('customField2'); // time of create/update order
+
+        if (!is_numeric($order_request_time)) {
+            $order_request_time = strtotime($order_request_time);
+        }
+
+        // exit
+        if ($curr_time - $order_request_time > 1800) {
+            http_response_code(400);
+            $this->return_message("There is no order info, Let's wait one more DMN try.");
+        }
+        //
+        
+        $transId = \Nuvei_Class::get_param('TransactionID');
+        
+        // save notification
+        $this->load->model('extension/nuvei/payment/nuvei');
+        $this->model_extension_nuvei_payment_nuvei->addAdminNotification($transId);
         
         $notify_url     = $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback');
         $void_params    = [
             'clientUniqueId'        => date('YmdHis') . '-' . uniqid(),
             'amount'                => (float) \Nuvei_Class::get_param('totalAmount'),
             'currency'              => \Nuvei_Class::get_param('currency'),
-            'relatedTransactionId'  => \Nuvei_Class::get_param('TransactionID', FILTER_SANITIZE_NUMBER_INT),
+            'relatedTransactionId'  => $transId,
             'url'                   => $notify_url,
             'urlDetails'            => ['notificationUrl' => $notify_url],
             'customData'            => 'This is Auto-Void transaction',

@@ -6,6 +6,7 @@
 ```
     * Added a specific parameter to the Simple Connect when the plugin is used on QA site.
     * Removed the plugin option to auto-close or not the APM popup.
+    * When the plugin cannot find an Order for some Sale/Auth DMN it will save a notification in the admin.
 ```
 
 # 1.8

@@ -149,6 +149,23 @@ class Nuvei extends \Opencart\System\Engine\Model
     }
     
     /**
+     * Add admin notification in case of Transaction without an Order.
+     * 
+     * @param string|int $transId
+     */
+    public function addAdminNotification($transId)
+    {
+        $msgTxt = sprintf($this->language->get('trans_notification_msg'), $this->db->escape($transId));
+        
+        $this->db->query("INSERT INTO `" . DB_PREFIX . "notification` SET 
+            `title` = '" . $this->language->get('trans_notification_title') . "', 
+            `text` = '" . $msgTxt . "', 
+            `status` = 0,
+            `date_added` = NOW()"
+        );
+    }
+    
+    /**
      * Just a helper method.
      * 
      * @return $status bool

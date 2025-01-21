@@ -36,6 +36,9 @@ $_['nuvei_rec_user_error']      = 'Please, login to add this product!';
 $_['The parameter Billing Address Email is not valid.']		= 'The parameter Billing Address Email is not valid.';
 $_['The parameter Shipping Address Email is not valid.']	= 'The parameter Shipping Address Email is not valid.';
 
+$_['trans_notification_title']  = 'Nuvei Payments notification';
+$_['trans_notification_msg']    = 'The plugin cannot find the corresponding Order in the Store for Transacion %s. Please check it in Nuvei Control Panel!';
+
 // chaeck the number of the symbols in NUVEI_CLASS class
 $_['The parameter Billing Address Email must be maximum 100 symbols.'] = 'The parameter Billing Address Email must be maximum 100 symbols.';
 
