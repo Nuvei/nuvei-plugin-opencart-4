@@ -1,13 +1,13 @@
 <script type="text/javascript">
-    var nuveiPluginCode     = '{{ NUVEI_PLUGIN_CODE }}';
-    var nuveiPluginTitle    = '{{ NUVEI_PLUGIN_TITLE }}';
+    const nuveiPluginCode     = '{{ NUVEI_PLUGIN_CODE }}';
+    const nuveiPluginTitle    = '{{ NUVEI_PLUGIN_TITLE }}';
     
     function showNuveiCheckout() {
         console.log('showNuveiCheckout()');
 
         $('#nuvei_checkout').show();
         
-        nuveiCheckoutSdkParams              = {{ nuvei_sdk_params|json_encode() }};
+        let nuveiCheckoutSdkParams          = '{{ nuvei_sdk_params|json_encode() }}';
         nuveiCheckoutSdkParams.prePayment   = nuveiPrePayment;
         nuveiCheckoutSdkParams.onResult     = nuveiAfterSdkResponse;
 
@@ -79,6 +79,12 @@
             && ( resp.result == 'APPROVED' || resp.result == 'PENDING' )
 
         ) {
+            window.location = '{{ nuveiRedirectUrl }}';
+            return;
+    
+    
+    
+    
             // TODO - remove this call in some of the next versions and redirect directly to success page at this point.
             $.ajax({
                 url: 'index.php?route={{ NUVEI_CONTROLLER_PATH }}|confirm&language={{ language }}',
@@ -90,10 +96,6 @@
                     $('#nuvei_blocker').removeClass('d-none');
                     $('#nuvei_error').addClass('d-none');
                 },
-
-                {#complete: function (json) {
-                    console.log(json);
-                },#}
 
                 success: function (json) {
                     console.log(json);
@@ -123,8 +125,10 @@
                 }
             });
         }
+        
         // declined
-        else if (resp.result == 'DECLINED') {
+//        else if (resp.result == 'DECLINED') {
+        if (resp.result == 'DECLINED') {
             if (resp.hasOwnProperty('errorDescription')
                 && 'insufficient funds' == resp.errorDescription.toLowerCase()
             ) {
@@ -135,8 +139,9 @@
             scFormFalse("{{ nuvei_order_declined }}");
             return;
         }
+        
         // other error
-        else {
+//        else {
             if (resp.hasOwnProperty('reason')) {
                 scFormFalse(resp.reason);
                 return;
@@ -148,7 +153,7 @@
             }
 
             scFormFalse("{{ nuvei_order_error }}");
-        }
+//        }
     }
 
     function scFormFalse(_errorMsg) {

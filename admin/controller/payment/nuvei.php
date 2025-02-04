@@ -195,69 +195,65 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'sort_order'    => 1,
         ]);
         
-        // Temporary stopped
         // add check for product with subscription before add it to the cart
-//        $this->model_setting_event->addEvent([
-//            'code'          => 'nuvei_before_add_product',
-//            'description'   => 'Do not combine a product with a Nuvei Payment Plan with ordinary product.',
-//            'trigger'       => \Nuvei_Version_Resolver::get_event_action('catalog/controller/checkout/cart|add/before'), 
-//            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_before_add_product'),
-//            'status'        => 1,
-//            'sort_order'    => 1,
-//        ]);
-        try {
-            $this->model_setting_event->deleteEventByCode('nuvei_before_add_product');
-        } catch (Exception $ex) {
-            // probably event is missing
-        }
+        $this->model_setting_event->addEvent([
+            'code'          => 'nuvei_before_add_product',
+            'description'   => 'Do not combine a product with a Nuvei Payment Plan with ordinary product.',
+            'trigger'       => \Nuvei_Version_Resolver::get_event_action('catalog/controller/checkout/cart|add/before'), 
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_before_add_product'),
+            'status'        => 1,
+            'sort_order'    => 1,
+        ]);
+//        try {
+//            $this->model_setting_event->deleteEventByCode('nuvei_before_add_product');
+//        } catch (Exception $ex) {
+//            // probably event is missing
+//        }
         
-        // Temporary stopped
         // add a JS scrtipt to show the error for the above event
-//        $this->model_setting_event->addEvent([
-//            'code'          => 'nuvei_product_mod',
-//            'description'   => 'If there is Nuvei error when try to add a product to the cart - show an error.',
-//            'trigger'       => 'catalog/controller/common/footer/before', 
-//            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_product_mod'),
-//            'status'        => 1,
-//            'sort_order'    => 1,
-//        ]);
-        try {
-            $this->model_setting_event->deleteEventByCode('nuvei_product_mod');
-        } catch (Exception $ex) {
-            // probably event is missing
-        }
+        $this->model_setting_event->addEvent([
+            'code'          => 'nuvei_product_mod',
+            'description'   => 'If there is Nuvei error when try to add a product to the cart - show an error.',
+            'trigger'       => 'catalog/controller/common/footer/before', 
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_add_product_mod'),
+            'status'        => 1,
+            'sort_order'    => 1,
+        ]);
+//        try {
+//            $this->model_setting_event->deleteEventByCode('nuvei_product_mod');
+//        } catch (Exception $ex) {
+//            // probably event is missing
+//        }
         
-        // Temporary stopped
         // add missing date_next parameter for Product Subscription data on the Checkout page
-//        $this->model_setting_event->addEvent([
-//            'code'          => 'nuvei_product_subscr_data_mod',
-//            'description'   => 'On Checkout page into the Product Subscription data add date_next parameter if missing.',
-//            'trigger'       => 'catalog/model/checkout/order/addOrder/before',
-//            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_check_subsc_data'),
-//            'status'        => 1,
-//            'sort_order'    => 1,
-//        ]);
-        try {
-            $this->model_setting_event->deleteEventByCode('nuvei_product_subscr_data_mod');
-        } catch (Exception $ex) {
-            // probably event is missing
-        }
+        $this->model_setting_event->addEvent([
+            'code'          => 'nuvei_product_subscr_data_mod',
+            'description'   => 'On Checkout page into the Product Subscription data add date_next parameter if missing.',
+            'trigger'       => 'catalog/model/checkout/order/addOrder/before',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_check_subsc_data'),
+            'status'        => 1,
+            'sort_order'    => 1,
+        ]);
+//        try {
+//            $this->model_setting_event->deleteEventByCode('nuvei_product_subscr_data_mod');
+//        } catch (Exception $ex) {
+//            // probably event is missing
+//        }
         
-        // Temporary stopped
         // filter payment providers on the checkout page
-//        $this->model_setting_event->addEvent([
-//            'code'          => 'nuvei_filter_payment_providers',
-//            'description'   => 'On Checkout page remove all payment providers if there is a product with Nuvei Payment Plan.',
-//            'trigger'       => 'catalog/model/checkout/payment_method/getMethods/after',
-//            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_filter_payment_providers'),
-//            'status'        => 1,
-//            'sort_order'    => 1,
-//        ]);
-        try {
-            $this->model_setting_event->deleteEventByCode('nuvei_filter_payment_providers');
-        } catch (Exception $ex) {
-            // probably event is missing
-        }
+        $this->model_setting_event->addEvent([
+            'code'          => 'nuvei_filter_payment_providers',
+            'description'   => 'On Checkout page remove all payment providers if there is a product with Nuvei Payment Plan.',
+            'trigger'       => 'catalog/model/checkout/payment_method/getMethods/after',
+            'action'        => \Nuvei_Version_Resolver::get_event_action('extension/nuvei/payment/nuvei|event_filter_payment_providers'),
+            'status'        => 1,
+            'sort_order'    => 1,
+        ]);
+//        try {
+//            $this->model_setting_event->deleteEventByCode('nuvei_filter_payment_providers');
+//        } catch (Exception $ex) {
+//            // probably event is missing
+//        }
     }
     
     public function uninstall()

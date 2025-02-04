@@ -150,6 +150,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         $data['NUVEI_PLUGIN_CODE']  = NUVEI_PLUGIN_CODE;
         $data['ocVersionInt']       = (int) str_replace('.', '', VERSION);
+        $data['nuveiRedirectUrl']   = $this->url->link(
+            'checkout/success',
+            'order_id=' . $this->session->data['order_id'] . '&language=' . $this->config->get('config_language'), 
+            true
+        );
         
         \Nuvei_Class::create_log($data['nuvei_sdk_params'], 'nuvei_sdk_params');
         
@@ -778,15 +783,11 @@ class Nuvei extends \Opencart\System\Engine\Controller
 			'urlDetails'        => array(
 				'backUrl'			=> $this->url->link('checkout/checkout', '', true),
 				'notificationUrl'   => $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback'),
+				'successUrl'        => NUVEI_SDK_AUTOCLOSE_URL,
+				'failureUrl'        => NUVEI_SDK_AUTOCLOSE_URL,
+				'pendingUrl'        => NUVEI_SDK_AUTOCLOSE_URL,
 			),
 		);
-        
-        // change urlDetails
-//        if (!empty($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'auto_close_apm_popup'])) {
-            $oo_params['urlDetails']['successUrl']  = $oo_params['urlDetails']['failureUrl']
-                                                    = $oo_params['urlDetails']['pendingUrl']
-                                                    = NUVEI_SDK_AUTOCLOSE_URL;
-//        }
         
         $oo_params = array_merge_recursive($oo_params, $rebilling_params);
         
@@ -1430,7 +1431,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             $this->create_auto_void();
             
             http_response_code(200);
-            $this->return_message('There is no order info.');
+            $this->return_message('The plugin cannot find Order by this DMN data.');
         }
         
         $isNuveiOrder = \Nuvei_Version_Resolver::check_for_nuvei_order($this->order_info);
