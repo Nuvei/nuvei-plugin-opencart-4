@@ -1,13 +1,13 @@
 <script type="text/javascript">
-    const nuveiPluginCode     = '{{ NUVEI_PLUGIN_CODE }}';
-    const nuveiPluginTitle    = '{{ NUVEI_PLUGIN_TITLE }}';
+    var nuveiPluginCode     = '{{ NUVEI_PLUGIN_CODE }}';
+    var nuveiPluginTitle    = '{{ NUVEI_PLUGIN_TITLE }}';
     
     function showNuveiCheckout() {
         console.log('showNuveiCheckout()');
 
         $('#nuvei_checkout').show();
         
-        let nuveiCheckoutSdkParams          = '{{ nuvei_sdk_params|json_encode() }}';
+        let nuveiCheckoutSdkParams          = {{ nuvei_sdk_params|json_encode() }};
         nuveiCheckoutSdkParams.prePayment   = nuveiPrePayment;
         nuveiCheckoutSdkParams.onResult     = nuveiAfterSdkResponse;
 
@@ -16,6 +16,7 @@
         if (typeof checkout.destroy == 'function') {
             checkout.destroy();
         }
+        
         checkout(nuveiCheckoutSdkParams);
     }
 
@@ -162,27 +163,31 @@
     }
 
     $(function() {
-        console.log('document loaded');
-        
-        $('#input-payment-method').on('change', function() {
-            console.log($(this).val());
-        }); 
-        
         {% if ocVersionInt >= 4020 %}
             // for version 4.0.2.1
-            console.log($('#input-payment-code').val());
             
-            $('#input-payment-code').on('change', function() {
-              let _self = $(this);
+            // observe the change of the payment method
+            const paymentCodeInput = document.getElementById('input-payment-code');
 
-              if (_self.val() != '{{ NUVEI_PLUGIN_CODE }}.{{ NUVEI_PLUGIN_CODE }}') {
-                  $('#nuvei_checkout').hide();
-              }
-            });
-            
-            if ($('#input-payment-code').val() != '{{ NUVEI_PLUGIN_CODE }}.{{ NUVEI_PLUGIN_CODE }}') {
-                $('#nuvei_checkout').hide();
+            if (paymentCodeInput) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' 
+                            && mutation.attributeName === 'value'
+                            && '{{ NUVEI_PLUGIN_CODE }}.{{ NUVEI_PLUGIN_CODE }}' != paymentCodeInput.value
+                        ) {
+                            $('#nuvei_checkout').hide();
+                        }
+                    });
+                });
+
+                observer.observe(paymentCodeInput, { attributes: true, attributeFilter: ['value'] });
             }
+            
+            // observe the click of the address form, who reset the shippping and the payment methods
+            $('#button-register').on('click', function() {
+                $('#nuvei_checkout').hide();
+            });
         {% else %}
             // for version 4.0.1.1
             $('#input-payment-method').on('change', function() {

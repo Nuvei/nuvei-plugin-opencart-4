@@ -405,7 +405,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
                 $this->plugin_settings,
                 [
                     'NUVEI_PLUGIN_CODE'         => NUVEI_PLUGIN_CODE,
-                    'session payment_method'    => $this->session->data['payment_method'],
+                    'session payment_method'    => @$this->session->data['payment_method'],
                 ],
                 'Payment method is incorrect.'
             );
