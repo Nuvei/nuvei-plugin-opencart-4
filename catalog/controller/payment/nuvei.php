@@ -126,7 +126,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
                     'locale' => $locale
                 ]
             ],
-            'sourceApplication'         => NUVEI_SOURCE_APP
+            'sourceApplication'         => NUVEI_SOURCE_APP,
+            'fieldStyle'				=> json_decode(html_entity_decode($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'sdk_style']), true),
 //            'apmWindowType'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'],
         ];
         
@@ -156,7 +157,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             true
         );
         
-        \Nuvei_Class::create_log($data['nuvei_sdk_params'], 'nuvei_sdk_params');
+        \Nuvei_Class::create_log($this->plugin_settings, $data['nuvei_sdk_params'], 'nuvei_sdk_params');
         
         return $this->load->view(NUVEI_CONTROLLER_PATH, $data);
 	}

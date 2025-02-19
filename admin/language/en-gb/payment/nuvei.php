@@ -43,7 +43,9 @@ $_['text_redirect']         = 'Redirect';
 $_['text_popup']            = 'Popup';
 $_['text_apm_popup_help']   = 'Works only when APM window type is "New tab".';
 
-$_['text_sdk_transl_help']  = 'This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples <a href="https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation" target="_blank">check the Documentation</a>.';
+$_['text_sdk_style_help']	= 'This filed is the only way to style Checkout SDK. Please, use JSON! For examples <a href="https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation" target="_blank">check the Documentation</a>.';
+
+$_['text_sdk_transl_help']  = 'This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples <a href="https://docs.nuvei.com/documentation/accept-payment/web-sdk/nuvei-fields/nuvei-fields-styling/#example-javascript" target="_blank">check the Documentation</a>.';
 
 $_['text_block_cards_help'] = 'For examples <a href="https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#card-blocking-rules" target="_blank"> check the Documentation.</a>';
 
@@ -91,6 +93,7 @@ $_['entry_upos']                = 'UPOs:';
 $_['entry_pay_button']          = 'Choose the Text on the Pay button:';
 $_['entry_auto_expand_pms']     = 'Auto expand PMs:';
 $_['entry_sdk_log_level']       = 'Checkout Log level:';
+$_['entry_sdk_style']			= 'SDK styling:';
 $_['entry_sdk_transl']          = 'SDK translations:';
 $_['entry_donwload_p_plans']    = 'Download Payment Plans:';
 $_['entry_dmn_url']             = 'Notification (DMN) URL:';

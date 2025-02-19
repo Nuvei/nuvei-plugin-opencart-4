@@ -9,6 +9,7 @@
     * When the plugin cannot find an Order for some Sale/Auth DMN it will save a notification in the admin.
     * Added option to turn off/on the auto-void.
     * The Subscription functionality was enabled again.
+    * Added an option to modify Simply Connect style.
 ```
 
 # 1.8
