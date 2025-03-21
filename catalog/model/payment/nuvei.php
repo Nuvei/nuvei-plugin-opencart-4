@@ -21,13 +21,13 @@ class Nuvei extends \Opencart\System\Engine\Model
         );
 		
         // Temporary disable plugin for subscriprions
-        if ($this->cart->hasSubscription()) {
-//            if (!$this->customer->isLogged()) {
-//                $status = false;
-//            }
-//
-            $status = false;
-		}
+//        if ($this->cart->hasSubscription()) {
+////            if (!$this->customer->isLogged()) {
+////                $status = false;
+////            }
+////
+//            $status = false;
+//		}
 //        elseif (!$this->cart->hasShipping()) {
 //			$status = false;
 //		}
@@ -98,9 +98,9 @@ class Nuvei extends \Opencart\System\Engine\Model
 		}
         
         // Temporary disable plugin for subscriprions
-        if ($this->cart->hasSubscription()) {
-            $status = false;
-		}
+//        if ($this->cart->hasSubscription()) {
+//            $status = false;
+//		}
         
         $method_data = [];
 
