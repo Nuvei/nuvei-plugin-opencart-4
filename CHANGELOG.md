@@ -2,6 +2,11 @@
 
 ---
 
+# 1.10
+```
+    * Exposed additional settings for Google Pay.
+```
+
 # 1.9
 ```
     * Added a specific parameter to the Simple Connect when the plugin is used on QA site.

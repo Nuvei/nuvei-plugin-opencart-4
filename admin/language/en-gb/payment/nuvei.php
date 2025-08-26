@@ -42,6 +42,14 @@ $_['text_new_tab']          = 'New tab';
 $_['text_redirect']         = 'Redirect';
 $_['text_popup']            = 'Popup';
 $_['text_apm_popup_help']   = 'Works only when APM window type is "New tab".';
+$_['text_black']            = 'Black';
+$_['text_white']            = 'White';
+$_['text_buy']              = 'Buy';
+$_['text_book']             = 'Book';
+$_['text_checkout']         = 'Checkout';
+$_['text_order']            = 'Order';
+$_['text_pay']              = 'Pay';
+$_['text_plain']            = 'Plain';
 
 $_['text_sdk_style_help']	= 'This filed is the only way to style Checkout SDK. Please, use JSON! For examples <a href="https://docs.nuvei.com/documentation/accept-payment/web-sdk/nuvei-fields/nuvei-fields-styling/#example-javascript" target="_blank">check the Documentation</a>.';
 
@@ -60,6 +68,8 @@ $_['text_github_plugin_same_version']   = 'Git version is same as the current pl
 $_['text_github_new_plugin_version']    = 'There is <a href="https://github.com/SafeChargeInternational/nuvei_checkout_opencart3/blob/main/CHANGELOG.md">newer version</a> for Nuvei Checkout plugin.';
 
 $_['text_block_auto_void'] = 'Allow plugin to initiate auto Void request in case there is Payment (transaction), but there is no Order for this transaction in the Store. This logic is based on incoming DMNs. Event the auto Void is disabled, a notification will be saved.';
+
+$_['text_gpay_merchant_id_help'] = 'For tests use BCR2DN6TZ6DP7P3X. <a href="https://docs.nuvei.com/documentation/global-guides/google-pay/google-pay-integration/google-pay-guide-checkout-sdk/#2-collect-the-card-details" target="_blank">Check the Documentation.</a>';
 
 // Entry					
 $_['entry_merchantId']      = 'Merchant ID:';
@@ -110,6 +120,9 @@ $_['nuvei_remove_log_confirm']      = 'Are you sure, you want to delete the logs
 $_['entry_sdk_version_help']        = 'It is not recommended to use Dev version on Production sites.';
 $_['entry_confirm_cancel_subs']     = 'Are you sure, you want to cancel the Nuvei Subsciption?';
 $_['entry_enable_auto_void']        = 'Enable Auto Void:';
+$_['entry_gpay_merchant_id']        = 'Google Pay Merchant ID:';
+$_['entry_gpay_btn_color']          = 'Google Pay Button Color:';
+$_['entry_gpay_btn_text']           = 'Google Pay Button Text:';
 
 // Error					
 $_['error_permission']	      		= 'Warning: You do not have permission to modify Nuvei!';

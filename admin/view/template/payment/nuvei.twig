@@ -418,6 +418,42 @@
                                 </div>
                             </div>
                                 
+                            <!-- Google Pay Merchant ID -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_gpay_merchant_id }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="{{ nuvei_settings_prefix }}gpay_merchant_id" value="{{ _context[nuvei_settings_prefix ~ '}gpay_merchant_id'] }}" class="form-control" />
+                                    
+                                    <span class="form-text">{{ text_gpay_merchant_id_help }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Google Pay Button color -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_gpay_btn_color }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}gpay_btn_color" class="form-select">
+                                        <option value="black" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_color']  == 'black' %} selected=""{% endif %}>{{ text_black }}</option>
+                                        <option value="white" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_color']  == 'white' %} selected=""{% endif %}>{{ text_white }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                                    
+                            <!-- Google Pay Button text -->
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">{{ entry_gpay_btn_text }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ nuvei_settings_prefix }}gpay_btn_text" class="form-select">
+                                        <option value="buy" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_text']  == 'buy' %} selected=""{% endif %}>{{ text_buy }}</option>
+                                        <option value="book" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_text']  == 'book' %} selected=""{% endif %}>{{ text_book }}</option>
+                                        <option value="checkout" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_text']  == 'checkout' %} selected=""{% endif %}>{{ text_checkout }}</option>
+                                        <option value="order" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_text']  == 'order' %} selected=""{% endif %}>{{ text_order }}</option>
+                                        <option value="pay" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_text']  == 'pay' %} selected=""{% endif %}>{{ text_pay }}</option>
+                                        <option value="plain" {% if _context[nuvei_settings_prefix ~ 'gpay_btn_text']  == 'plain' %} selected=""{% endif %}>{{ text_plain }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                                
                             <!-- Rebilling Plan ID -->
                             <div class="row mb-3">
                                 <label class="col-sm-2 col-form-label">{{ entry_rebilling_plan_id }}</label>
