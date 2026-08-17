@@ -61,15 +61,12 @@ class Nuvei_Class
         ),
         'deviceName' => array(
             'length' => 255,
-            'flag'    => FILTER_DEFAULT
         ),
         'deviceOS' => array(
             'length' => 255,
-            'flag'    => FILTER_DEFAULT
         ),
         'browser' => array(
             'length' => 255,
-            'flag'    => FILTER_DEFAULT
         ),
 //        'ipAddress' => array(
 //            'length' => 15,
@@ -80,31 +77,24 @@ class Nuvei_Class
         // userDetails, shippingAddress, billingAddress
         'firstName' => array(
             'length' => 30,
-            'flag'    => FILTER_DEFAULT
         ),
         'lastName' => array(
             'length' => 40,
-            'flag'    => FILTER_DEFAULT
         ),
         'address' => array(
             'length' => 60,
-            'flag'    => FILTER_DEFAULT
         ),
         'cell' => array(
             'length' => 18,
-            'flag'    => FILTER_DEFAULT
         ),
         'phone' => array(
             'length' => 18,
-            'flag'    => FILTER_DEFAULT
         ),
         'zip' => array(
             'length' => 10,
-            'flag'    => FILTER_DEFAULT
         ),
         'city' => array(
             'length' => 30,
-            'flag'    => FILTER_DEFAULT
         ),
         'country' => array(
             'length' => 20,
@@ -114,22 +104,18 @@ class Nuvei_Class
         ),
         'county' => array(
             'length' => 255,
-            'flag'    => FILTER_DEFAULT
         ),
         // userDetails, shippingAddress, billingAddress END
         
         // specific for shippingAddress
         'shippingCounty' => array(
             'length' => 255,
-            'flag'    => FILTER_DEFAULT
         ),
         'addressLine2' => array(
             'length' => 50,
-            'flag'    => FILTER_DEFAULT
         ),
         'addressLine3' => array(
             'length' => 50,
-            'flag'    => FILTER_DEFAULT
         ),
         // specific for shippingAddress END
         
@@ -251,6 +237,12 @@ class Nuvei_Class
         $params['checksum'] = hash($settings[NUVEI_SETTINGS_PREFIX . 'hash'], $concat);
         // /calculate the checksum
         
+        self::create_log(
+            $settings,
+            $params
+            , '$params before validation'
+        );
+        
         // validate parameters
         $params = self::validate_params($params, $settings);
         
@@ -311,19 +303,70 @@ class Nuvei_Class
      * 
      * @return mixed
      */
-    public static function get_param($name, $filter = FILTER_DEFAULT)
+//    public static function get_param($name, $filter = FILTER_DEFAULT)
+//    {
+//        $val = filter_input(INPUT_GET, $name, $filter);
+//        
+//        if(null === $val || false === $val) {
+//            $val = filter_input(INPUT_POST, $name, $filter);
+//        }
+//        
+//        if(null === $val || false === $val) {
+//            return false;
+//        }
+//        
+//        return $val;
+//    }
+    
+    /**
+     * 
+     * @param array $request
+     * @param string $key
+     * @param string $type
+     * @param mixed $default
+     */
+    public static function get_param($request, string $key, string $type = 'string', $default = null)
     {
-        $val = filter_input(INPUT_GET, $name, $filter);
+        $value = $default;
         
-        if(null === $val || false === $val) {
-            $val = filter_input(INPUT_POST, $name, $filter);
+        if (isset($request[$key])) {
+            $value = $request->post[$key];
         }
-        
-        if(null === $val || false === $val) {
-            return false;
+        else {
+            return $default;
         }
-        
-        return $val;
+
+        // 2. Санитизация според очаквания тип
+        switch ($type) {
+            case 'int':
+                return (int) $value;
+
+            case 'float':
+                return (float) $value;
+
+            case 'bool':
+                return (bool) $value;
+
+            case 'array':
+                return is_array($value) ? $value : [];
+                
+            case 'json':
+                if (is_array($value)) {
+                    return $value;
+                }
+
+                $decoded = json_decode(html_entity_decode((string)$value, ENT_QUOTES, 'UTF-8'), true);
+
+                return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $default;
+
+            case 'string':
+            default:
+                if (is_array($value)) {
+                    return $default; // Защита срещу масив, изпратен вместо стринг
+                }
+                
+                return trim(strip_tags((string) $value));
+        }
     }
     
 	/**
@@ -417,7 +460,8 @@ class Nuvei_Class
                 // clean possible objects inside array
                 $data = json_decode(json_encode($data), true);
                 
-                array_walk_recursive($data, 'self::maskData', self::$fieldsToMask);
+//                array_walk_recursive($data, 'self::maskData', self::$fieldsToMask);
+                array_walk_recursive($data, [self::class, 'maskData'], self::$fieldsToMask);
             }
             
             // paymentMethods can be very big array
@@ -433,7 +477,8 @@ class Nuvei_Class
                 // clean possible objects inside array
                 $data = json_decode(json_encode($data), true);
                 
-                array_walk_recursive($data, 'self::maskData', self::$fieldsToMask);
+//                array_walk_recursive($data, 'self::maskData', self::$fieldsToMask);
+                array_walk_recursive($data, [self::class, 'maskData'], self::$fieldsToMask);
             }
             
             $data_tmp   = print_r($data, true);
@@ -510,6 +555,23 @@ class Nuvei_Class
         }
         
         return '';
+    }
+    
+    /**
+     * In case we use a constant with hard-coded URL we will modify the 
+     * real URL with it, here.
+     * 
+     * @param string $url
+     */
+    public static function get_notify_url($url)
+    {
+        // modify the URL
+        if (defined('NUVEI_CUSTOM_DMN_URL') && !empty(NUVEI_CUSTOM_DMN_URL)) {
+            return NUVEI_CUSTOM_DMN_URL;
+        }
+        
+        // just return the same URL
+        return $url;
     }
     
     /**
@@ -670,6 +732,7 @@ class Nuvei_Class
             if (!is_array($val1) && !empty($val1) && array_key_exists($key1, self::$params_validation)) {
                 $new_val = $val1;
                 
+                // limit error
                 if (mb_strlen($val1) > self::$params_validation[$key1]['length']) {
                     $new_val = mb_substr($val1, 0, self::$params_validation[$key1]['length']);
                     
@@ -679,12 +742,16 @@ class Nuvei_Class
                 if (isset(self::$params_validation[$key1]['flag'])) {
                     $params[$key1] = filter_var($new_val, self::$params_validation[$key1]['flag']);
                 }
+                else {
+                    $params[$key1] = $new_val;
+                }
             }
 			elseif (is_array($val1) && !empty($val1)) {
                 foreach ($val1 as $key2 => $val2) {
                     if (!is_array($val2) && !empty($val2) && array_key_exists($key2, self::$params_validation)) {
                         $new_val = $val2;
 
+                        // limit error
                         if (mb_strlen($val2) > self::$params_validation[$key2]['length']) {
                             $new_val = mb_substr($val2, 0, self::$params_validation[$key2]['length']);
                             
@@ -693,6 +760,9 @@ class Nuvei_Class
 
                         if (isset(self::$params_validation[$key2]['flag'])) {
                             $params[$key1][$key2] = filter_var($new_val, self::$params_validation[$key2]['flag']);
+                        }
+                        else {
+                            $params[$key1][$key2] = $new_val;
                         }
                     }
                 }

@@ -549,13 +549,16 @@ class Nuvei extends \Opencart\System\Engine\Controller
         
         $this->plugin_settings = $this->model_setting_setting->getSetting(trim(NUVEI_SETTINGS_PREFIX, '_'));
         
-        $order_id           = (int) $this->request->post['orderId'];
-        $this->notify_url   = $this->url->link(
-            NUVEI_CONTROLLER_PATH . '%7Ccallback'
+        $this->notify_url = str_replace(
+            'admin/', 
+            '', 
+            $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback')
         );
-
-        $this->notify_url   = str_replace('admin/', '', $this->notify_url);
-		$request_amount     = round((float) $this->request->post['amount'], 2);
+        
+        $this->notify_url = \Nuvei_Class::get_notify_url($this->notify_url);
+        
+        $order_id       = (int) $this->request->post['orderId'];
+        $request_amount = round((float) $this->request->post['amount'], 2);
 		
 		\Nuvei_Class::create_log(
             $this->plugin_settings,
@@ -608,9 +611,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		$time = date('YmdHis');
 		
         $ref_parameters = array(
-//			'clientUniqueId'        => $order_id . '_' . $time . '_' . uniqid(),
 			'clientUniqueId'        => $order_id . '_' . uniqid(),
-//            'clientRequestId'       => $time . '_' . uniqid(),
 			'amount'                => $this->request->post['amount'],
 			'currency'              => $this->data['currency_code'],
 			'relatedTransactionId'  => $last_sale_tr['transactionId'],
@@ -618,7 +619,6 @@ class Nuvei extends \Opencart\System\Engine\Controller
 			'url'                   => $this->notify_url,
 			'customData'            => $request_amount, // optional - pass the Refund Amount here
 			'urlDetails'            => array('notificationUrl' => $this->notify_url),
-			'url'                   => $this->notify_url,
 		);
 		
 		$resp = \Nuvei_Class::call_rest_api(
@@ -689,9 +689,10 @@ class Nuvei extends \Opencart\System\Engine\Controller
             ]));
         }
         
+        $this->notify_url   = str_replace('admin/', '', $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback'));
+        $this->notify_url   = \Nuvei_Class::get_notify_url($this->notify_url);
+        
         $order_id           = (int) $this->request->post['orderId'];
-        $this->notify_url   = $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback');
-        $this->notify_url   = str_replace('admin/', '', $this->notify_url);
         $this->data         = $this->model_sale_order->getOrder($order_id);
         $time               = date('YmdHis', time());
         $last_allowed_trans = [];
@@ -817,8 +818,9 @@ class Nuvei extends \Opencart\System\Engine\Controller
             ]));
         }
         
-        $this->notify_url   = $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback');
-        $this->notify_url   = str_replace('admin/', '', $this->notify_url);
+        $this->notify_url   = str_replace('admin/', '', $this->url->link(NUVEI_CONTROLLER_PATH . '%7Ccallback'));
+        $this->notify_url   = \Nuvei_Class::get_notify_url($this->notify_url);
+        
         $this->data         = $this->model_sale_order->getOrder($order_id);
         $last_allowed_trans = [];
         

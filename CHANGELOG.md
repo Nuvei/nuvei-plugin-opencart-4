@@ -4,7 +4,9 @@
 
 # 1.10
 ```
-    * Exposed additional settings for Google Pay.
+    * Exposed additional settings for GPay.
+    * GPay and ApplePay were moved into the APMs gallery.
+    * Added check for custom DMN URL constant NUVEI_CUSTOM_DMN_URL.
 ```
 
 # 1.9
