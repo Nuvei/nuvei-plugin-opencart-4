@@ -2,13 +2,16 @@
 
 namespace Opencart\Catalog\Controller\Extension\Nuvei\Payment;
 
+use Opencart\System\Engine\Controller;
+use Opencart\System\Engine\Registry;
+
 require_once DIR_EXTENSION . DIRECTORY_SEPARATOR . 'nuvei' . DIRECTORY_SEPARATOR . 'nuvei_class.php';
 require_once DIR_EXTENSION . DIRECTORY_SEPARATOR . 'nuvei' . DIRECTORY_SEPARATOR . 'nuvei_version_resolver.php';
 
 /**
  * @author Nuvei
  */
-class Nuvei extends \Opencart\System\Engine\Controller
+class Nuvei extends Controller
 {
     private $is_user_logged;
 	private $order_info;
@@ -18,8 +21,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
     private $new_order_status   = 0;
     private $total_curr_alert   = false;
     
-    public function __construct() {
-        parent::__construct();
+    public function __construct(Registry $registry) {
+        parent::__construct($registry);
 
         $this->requestData = array_merge((array)$this->request->get, (array)$this->request->post);
     }
@@ -126,6 +129,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'buttonLocation'    => 'gallery',
         );
         
+        $simplyConnectEnv = 1 == $test_mode ? 'test' : 'prod';
+        
+        if (defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['simply_env'])) {
+            $simplyConnectEnv = NUVEI_LOCAL_CONF['simply_env'];
+        }
+        
         $data['nuvei_sdk_params'] = [
             'renderTo'                  => '#nuvei_checkout',
             'strict'                    => false,
@@ -133,7 +142,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             'maskCvv'                   => true,
             'showResponseMessage'       => false,
             'sessionToken'              => $order_data['sessionToken'],
-            'env'                       => 1 == $test_mode ? 'test' : 'prod',
+            'env'                       => $simplyConnectEnv,
             'merchantId'                => trim($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'merchantId']),
             'merchantSiteId'            => trim($this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'merchantSiteId']),
             'country'                   => $order_data['billingAddress']['country'],
@@ -162,8 +171,12 @@ class Nuvei extends \Opencart\System\Engine\Controller
 //            'apmWindowType'             => $this->plugin_settings[NUVEI_SETTINGS_PREFIX . 'apm_window_type'],
         ];
         
-        if ($this->isQaSite()) {
-            $data['nuvei_sdk_params']['webSdkEnv'] = 'devmobile';
+//        if ($this->isQaSite()) {
+//            $data['nuvei_sdk_params']['webSdkEnv'] = 'devmobile';
+//        }
+        
+        if (defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['webSdk_env'])) {
+            $data['nuvei_sdk_params']['webSdkEnv'] = NUVEI_LOCAL_CONF['webSdk_env'];
         }
         
         $data['language']               = $this->config->get('config_language');
@@ -492,7 +505,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
         $this->load->model('checkout/order');
         $this->load->language(NUVEI_CONTROLLER_PATH);
         
-        \Nuvei_Class::create_log($this->plugin_settings, $_REQUEST, 'DMN request');
+        \Nuvei_Class::create_log($this->plugin_settings, $this->requestData, 'DMN request');
         
         ### Manual stop DMN is possible only in test mode
 //        \Nuvei_Class::create_log($this->plugin_settings, 'manually stoped');
@@ -633,7 +646,7 @@ class Nuvei extends \Opencart\System\Engine\Controller
             [
                 '$nuvei_last_oo_details'    => $nuvei_last_oo_details,
                 'main products data'        => $products,
-                'products'                  => $this->model_checkout_cart->getProducts(),
+//                'products'                  => $this->model_checkout_cart->getProducts(),
                 '$serializedProducts'       => $serializedProducts
             ]
         );
@@ -865,27 +878,14 @@ class Nuvei extends \Opencart\System\Engine\Controller
      */
     private function validate_dmn()
     {
-        $advanceResponseChecksum = \Nuvei_Class::get_param($this->requestData, 'advanceResponseChecksum');
-		$responsechecksum        = \Nuvei_Class::get_param($this->requestData, 'responsechecksum');
-		
-		if (empty($advanceResponseChecksum) && empty($responsechecksum)) {
-            \Nuvei_Class::create_log(
-                $this->plugin_settings,
-                'advanceResponseChecksum and responsechecksum parameters are empty.',
-                '',
-                'CRITICAL'
-            );
-			return false;
-		}
-		
 		// advanceResponseChecksum case
-		if (!empty($advanceResponseChecksum)) {
-            $concatParams = \Nuvei_Class::get_param($this->requestData, 'totalAmount', 'float')
-                . \Nuvei_Class::get_param($this->requestData, 'currency')
-                . \Nuvei_Class::get_param($this->requestData, $this->requestData, 'responseTimeStamp')
-                . \Nuvei_Class::get_param($this->requestData, 'PPP_TransactionID')
+		if (!empty($this->requestData['advanceResponseChecksum'])) {
+            $concatParams = $this->requestData['totalAmount']
+                . $this->requestData['currency']
+                . $this->requestData['responseTimeStamp']
+                . $this->requestData['PPP_TransactionID']
                 . $this->get_request_status()
-                . \Nuvei_Class::get_param($this->requestData, 'productId', 'int');
+                . $this->requestData['productId'];
             
             $str = hash(
                 $this->config->get(NUVEI_SETTINGS_PREFIX . 'hash'),
@@ -906,31 +906,42 @@ class Nuvei extends \Opencart\System\Engine\Controller
 		}
 		
 		# subscription DMN with responsechecksum case
-		$concat        = '';
-		$request_arr   = $_REQUEST;
-		$custom_params = array(
-			'route'             => '',
-			'responsechecksum'  => '',
-		);
-		
-		// remove parameters not part of the checksum
-		$dmn_params = array_diff_key($request_arr, $custom_params);
-		$concat     = implode('', $dmn_params);
-		
-		$concat_final = $concat . trim($this->config->get(NUVEI_SETTINGS_PREFIX . 'secret'));
-		$checksum     = hash($this->config->get(NUVEI_SETTINGS_PREFIX . 'hash'), $concat_final);
-		
-		if ($responsechecksum !== $checksum) {
-            \Nuvei_Class::create_log(
-                $this->plugin_settings,
-                'responsechecksum validation fail.',
-                '',
-                'WARN'
+        if (!empty($this->requestData['responsechecksum'])) {
+            $concat        = '';
+            $request_arr   = $_REQUEST;
+            $custom_params = array(
+                'route'             => '',
+                'responsechecksum'  => '',
             );
-			return false;
-		}
-		
-		return true;
+
+            // remove parameters not part of the checksum
+            $dmn_params = array_diff_key($request_arr, $custom_params);
+            $concat     = implode('', $dmn_params);
+
+            $concat_final = $concat . trim($this->config->get(NUVEI_SETTINGS_PREFIX . 'secret'));
+            $checksum     = hash($this->config->get(NUVEI_SETTINGS_PREFIX . 'hash'), $concat_final);
+
+            if ($this->requestData['responsechecksum'] !== $checksum) {
+                \Nuvei_Class::create_log(
+                    $this->plugin_settings,
+                    'responsechecksum validation fail.',
+                    '',
+                    'WARN'
+                );
+                return false;
+            }
+
+            return true;
+        }
+        
+        \Nuvei_Class::create_log(
+            $this->plugin_settings,
+            '',
+            'advanceResponseChecksum and responsechecksum parameters are empty.',
+            'WARN'
+        );
+
+        return false;
 	}
     
     /**
@@ -2135,9 +2146,13 @@ class Nuvei extends \Opencart\System\Engine\Controller
      */
     private function getSdkUrl()
     {
-        if ($this->isQaSite()) {
-            return NUVEI_SDK_URL_TAG;
+        if (defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['simply_url'])) {
+            return NUVEI_LOCAL_CONF['simply_url'];
         }
+        
+//        if ($this->isQaSite()) {
+//            return NUVEI_SDK_URL_TAG;
+//        }
         
         return NUVEI_SDK_URL_PROD;
     }
@@ -2146,6 +2161,8 @@ class Nuvei extends \Opencart\System\Engine\Controller
      * Check for the QA site.
      * 
      * @return bool
+     * 
+     * @deprecated since version 1.10
      */
     private function isQaSite()
     {

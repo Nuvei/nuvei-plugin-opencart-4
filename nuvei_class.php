@@ -35,6 +35,10 @@ const NUVEI_SOURCE_APP          = 'OPENCART_3_0_PLUGIN';
 //const NUVEI_ADMIN_TXT_EXT_KEY =    'text_extension';
 const NUVEI_ADMIN_EXT_URL       = 'marketplace/extension';
 
+if ( is_file( dirname(__DIR__) . '/nuvei.config.local.php' ) ) {
+    include_once dirname(__DIR__) . '/nuvei.config.local.php';
+}
+
 class Nuvei_Class
 {
     private static $fieldsToMask = [
@@ -192,24 +196,22 @@ class Nuvei_Class
         $time = date('YmdHis', time());
        
         // set here some of the mandatory parameters
-//        $params = array_merge_recursive(
-        $params = array_merge(
+        $webMasterId    = 'OpenCart ' . VERSION . '; Plugin v' . self::get_plugin_version();
+        $params         = array_merge(
             array(
                 'clientRequestId'   => $time . '_' . uniqid(),
                 'merchantId'        => trim($settings[NUVEI_SETTINGS_PREFIX . 'merchantId']),
                 'merchantSiteId'    => trim($settings[NUVEI_SETTINGS_PREFIX . 'merchantSiteId']),
                 'timeStamp'         => $time,
-                'webMasterId'       => 'OpenCart ' . VERSION . '; Plugin v' . self::get_plugin_version(),
+                'webMasterId'       => $webMasterId,
                 'sourceApplication' => NUVEI_SOURCE_APP,
-//                'merchantDetails'	=> array(
-//					'customField2' => time(), // time when we create request
-//				),
                 'deviceDetails'     => self::get_device_details($settings),
             ),
             $params
         );
         
-        $params['merchantDetails']['customField2'] = time();
+        $params['merchantDetails']['customField2']  = time();
+        $params['merchantDetails']['customField15'] = $webMasterId;
         
         // calculate the checksum
         $concat = '';
@@ -320,21 +322,18 @@ class Nuvei_Class
     
     /**
      * 
-     * @param array $request
+     * @param array $params
      * @param string $key
      * @param string $type
      * @param mixed $default
      */
-    public static function get_param($request, string $key, string $type = 'string', $default = null)
+    public static function get_param($params, string $key, string $type = 'string', $default = null)
     {
-        $value = $default;
-        
-        if (isset($request[$key])) {
-            $value = $request->post[$key];
-        }
-        else {
+        if (!isset($params[$key])) {
             return $default;
         }
+        
+        $value = $params[$key];
 
         // 2. Санитизация според очаквания тип
         switch ($type) {
@@ -565,10 +564,14 @@ class Nuvei_Class
      */
     public static function get_notify_url($url)
     {
-        // modify the URL
-        if (defined('NUVEI_CUSTOM_DMN_URL') && !empty(NUVEI_CUSTOM_DMN_URL)) {
-            return NUVEI_CUSTOM_DMN_URL;
+        if (defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['dmn_url'])) {
+            return NUVEI_LOCAL_CONF['dmn_url'];
         }
+        
+        // modify the URL
+//        if (defined('NUVEI_CUSTOM_DMN_URL') && !empty(NUVEI_CUSTOM_DMN_URL)) {
+//            return NUVEI_CUSTOM_DMN_URL;
+//        }
         
         // just return the same URL
         return $url;
@@ -666,6 +669,10 @@ class Nuvei_Class
 	 */
 	private static function get_endpoint_base(array $settings)
     {
+        if (defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['endpoint_base'])) {
+            return NUVEI_LOCAL_CONF['endpoint_base'];
+        }
+        
 		if (isset($settings[NUVEI_SETTINGS_PREFIX . 'test_mode'])
             && 1 == $settings[NUVEI_SETTINGS_PREFIX . 'test_mode']
         ) {
