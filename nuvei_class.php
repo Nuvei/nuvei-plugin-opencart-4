@@ -329,7 +329,7 @@ class Nuvei_Class
      */
     public static function get_param($params, string $key, string $type = 'string', $default = null)
     {
-        if (!isset($params[$key])) {
+        if (!is_string($key) || !isset($params[$key])) {
             return $default;
         }
         
