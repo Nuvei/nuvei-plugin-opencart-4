@@ -7,6 +7,7 @@
     * Exposed additional settings for GPay.
     * GPay and ApplePay were moved into the APMs gallery.
     * Added check for custom DMN URL constant NUVEI_CUSTOM_DMN_URL.
+    * Verify the SSLs.
 ```
 
 # 1.9
